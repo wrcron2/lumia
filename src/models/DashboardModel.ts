@@ -51,14 +51,14 @@ export interface UtmAgeDemographicData {
 type AgeGroupType = Record<number, Transaction>
 
 
-const utmColors: Record<string, string> = {
-    google: '#FF4545',   // Red
-    facebook: '#4285F4', // Blue
-    instagram: '#C13584', // Purple
-    tiktok: '#000000',   // Black
-    twitter: '#1DA1F2',  // Light blue
-    pinterest: '#E60023', // Red
-    linkedin: '#0A66C2'  // Blue
+const utmColors: Record<string, {nodeColor: string, linkColor: string}> = {
+    google: {nodeColor: '#FF4545', linkColor: 'rgba(227, 76, 79, 0.4)'},   
+    facebook:{ nodeColor: '#4285F4', linkColor: 'rgba(66, 103, 178, 0.4)'},
+    instagram: {nodeColor: '#C13584', linkColor: "rgba(193, 53, 132, 0.4)"}, // Purple
+    tiktok: {nodeColor: '#000000', linkColor: 'rgba(0, 0, 0, 0.4)'},   // Black
+    twitter: {nodeColor: '#1DA1F2', linkColor: 'rgba(29, 161, 242, 0.4)'},  // Light blue
+    pinterest: {nodeColor: '#E60023', linkColor: 'rgba(230, 0, 35, 0.4)'}, // Red
+    linkedin: {nodeColor: '#0A66C2', linkColor: 'rgba(10, 102, 194, 0.4)'}  // Blue
  }
 
  const ageGroupsColors: Record<string, string> = {
@@ -77,7 +77,7 @@ const utmColors: Record<string, string> = {
     uniqueCustomers: number;
     revenueChange: number;
     transactionsChange: number;
-    uniqueCustomersChange: number;
+    // uniqueCustomersChange: number;
     utmAgeDemographics: UtmAgeDemographicData;
   } 
  
@@ -92,6 +92,8 @@ const ageObjectColors = [
 ]
 
 
+
+
  class DashboardModel {
     transactions: Transaction[] = [];
     utm_Data: UtmAgeDemographicData = { nodes: [], links: [] };
@@ -102,7 +104,7 @@ const ageObjectColors = [
         uniqueCustomers: 0,
         revenueChange: 0,
         transactionsChange: 0,
-        uniqueCustomersChange: 0,
+        // uniqueCustomersChange: 0,
         utmAgeDemographics: { nodes: [], links: [] },
       };
 
@@ -170,18 +172,19 @@ const ageObjectColors = [
             return {
                 id: item,
                 name: item.charAt(0).toUpperCase() + item.slice(1),
-                color: utmColors[item]
+                color: utmColors[item].nodeColor
             }
         })
 
 
         const links:UtmAgeDemographicLink[]  = transactions.map((transaction: EnrichedTransaction) => {
+            
             const ageGroup = this.calculateAgeGroup(transaction.customer_metadata.birthday_time, transaction.transaction_time)
             return {
                 source: transaction.utm_source,
                 target: ageGroup,
                 value: transaction.revenue_usd,
-                color: ageGroupsColors[ageGroup]
+                color: utmColors[transaction.utm_source].linkColor
             }
         })
     
@@ -228,7 +231,7 @@ const ageObjectColors = [
             //calculate percentage change
             const revenueChange = prevRevenue === 0 ? 0 : ((totalRevenue - prevRevenue) / prevRevenue) * 100;
             const transactionsChange = prevTransactions === 0 ? 0 : ((totalTransactions - prevTransactions) / prevTransactions) * 100;
-            const uniqueCustomersChange = prevUniqueCustomers === 0 ? 0 : ((uniqueCustomers - prevUniqueCustomers) / prevUniqueCustomers) * 100
+            // const uniqueCustomersChange = prevUniqueCustomers === 0 ? 0 : ((uniqueCustomers - prevUniqueCustomers) / prevUniqueCustomers) * 100
             
             const utmAgeDemographics = this.generateUtmAgeDemographicData(currentTransactions);
             this.transactionsTabRange = {
@@ -237,7 +240,7 @@ const ageObjectColors = [
                 uniqueCustomers,
                 revenueChange,
                 transactionsChange,
-                uniqueCustomersChange,
+                // uniqueCustomersChange,
                 utmAgeDemographics
             }
             return {
@@ -246,7 +249,7 @@ const ageObjectColors = [
                 uniqueCustomers,
                 revenueChange,
                 transactionsChange,
-                uniqueCustomersChange,
+                // uniqueCustomersChange,
                 utmAgeDemographics
             }
       }

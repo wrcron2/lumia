@@ -26,10 +26,10 @@ export const MetricCards: React.FC<MetricCardsProps> = () => {
     {
       title: "Unique Customers",
       value: transactionsTabRange.uniqueCustomers,
-      change: transactionsTabRange.uniqueCustomersChange,
+      change: null,
     },
   ];
-  const renderMetricCard = (title: string, value: number, change: number) => {
+  const renderMetricCard = (title: string, value: number, change: number | null) => {
     return (
       <div className="h-32 bg-white border-2 border-green-200 rounded-lg p-4 relative">
         <div className="absolute top-0 right-0 bg-green-100 text-xs px-2 py-1 rounded-bl-lg">
@@ -39,9 +39,9 @@ export const MetricCards: React.FC<MetricCardsProps> = () => {
         <div className="text-2xl font-bold">
           {formatNumberWithAffixes(value, "$", "")}
         </div>
-        <div className="text-green-500 text-sm">
+       {change && <div className="text-green-500 text-sm">
           ↑ {formatNumberWithAffixes(change, "", "%")}
-        </div>
+        </div>}
       </div>
     );
   };
@@ -49,7 +49,7 @@ export const MetricCards: React.FC<MetricCardsProps> = () => {
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
       {metricsData.map((item) =>
-        renderMetricCard(item.title, item.value, item.change)
+        renderMetricCard(item.title, item.value, item?.change)
       )}
     </div>
   );
