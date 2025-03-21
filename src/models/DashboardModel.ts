@@ -135,18 +135,16 @@ const ageObjectColors = [
             case "7d": {
 
                 start = end -( 7 * DAY_MS)
-                prevStart = start - 1
-                prevEnd = prevStart - (7 * DAY_MS)
+                prevEnd = start - 1
+                prevStart = prevEnd - (7 * DAY_MS)
                 break;
 
             }
             case "30d": {
-
-                start = end -( 30 * DAY_MS)
-                prevStart = start - 1
-                prevEnd = prevStart - (30 * DAY_MS)
+                start = end - (30 * DAY_MS)
+                prevEnd = start - 1
+                prevStart = prevEnd - (30 * DAY_MS)
                 break;
-
             }
             case "all":
 

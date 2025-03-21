@@ -4,6 +4,7 @@ import SankeyDiagram from "./components/sankyDiagram";
 import CustomPieChart from "./components/customPieChart";
 import DashboardModel, { TransactionsTabRange } from "./models/DashboardModel";
 import { useFetchTransactions } from "./hooks/fetchTransaction";
+import { MetricCards } from "./components/metricCard";
 
 // Tabs for mobile view
 const tabs = ["Dashboard", "Analytics", "Settings"];
@@ -49,7 +50,7 @@ function EnhancedResponsiveApp() {
   useEffect(() => {}, []);
 
   const memoizedTransactions = React.useMemo(() => {
-    return DashboardModel.processTransactions(transactions, "30d");
+    return DashboardModel.processTransactions(transactions, "7d");
   }, [transactions]);
 
   useEffect(() => {
@@ -133,36 +134,9 @@ function EnhancedResponsiveApp() {
             </div>
           </div>
         </div>
-
         {/* Metrics row - stack on mobile, row on tablet+ */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-          <div className="h-32 bg-white border-2 border-green-200 rounded-lg p-4 relative">
-            <div className="absolute top-0 right-0 bg-green-100 text-xs px-2 py-1 rounded-bl-lg">
-              col-span-1/3 on md+
-            </div>
-            <div className="text-gray-500 mb-2">Revenue</div>
-            <div className="text-2xl font-bold">$128M</div>
-            <div className="text-green-500 text-sm">↑ 32%</div>
-          </div>
-
-          <div className="h-32 bg-white border-2 border-green-200 rounded-lg p-4 relative">
-            <div className="absolute top-0 right-0 bg-green-100 text-xs px-2 py-1 rounded-bl-lg">
-              col-span-1/3 on md+
-            </div>
-            <div className="text-gray-500 mb-2">Transactions</div>
-            <div className="text-2xl font-bold">1.4M</div>
-            <div className="text-green-500 text-sm">↑ 12%</div>
-          </div>
-
-          <div className="h-32 bg-white border-2 border-green-200 rounded-lg p-4 relative">
-            <div className="absolute top-0 right-0 bg-green-100 text-xs px-2 py-1 rounded-bl-lg">
-              col-span-1/3 on md+
-            </div>
-            <div className="text-gray-500 mb-2">Unique Customers</div>
-            <div className="text-2xl font-bold">824K</div>
-            <div className="text-red-500 text-sm">↓ 2%</div>
-          </div>
-        </div>
+        <MetricCards />
+      
 
         {/* Visualization grid - changes layout based on screen size */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 h-[48rem]">
