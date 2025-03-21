@@ -29,19 +29,25 @@ export const MetricCards: React.FC<MetricCardsProps> = () => {
       change: null,
     },
   ];
-  const renderMetricCard = (title: string, value: number, change: number | null) => {
+  const renderMetricCard = (
+    title: string,
+    value: number,
+    change: number | null
+  ) => {
     return (
-      <div className="h-32 bg-white border-2 border-green-200 rounded-lg p-4 relative">
-        <div className="absolute top-0 right-0 bg-green-100 text-xs px-2 py-1 rounded-bl-lg">
-          col-span-1/3 on md+
-        </div>
+      <div
+        key={title}
+        className="h-32 bg-white border-2 border-green-200 rounded-lg p-4 relative"
+      >
         <div className="text-gray-500 mb-2">{title}</div>
         <div className="text-2xl font-bold">
           {formatNumberWithAffixes(value, "$", "")}
         </div>
-       {change && <div className="text-green-500 text-sm">
-          ↑ {formatNumberWithAffixes(change, "", "%")}
-        </div>}
+        {change && (
+          <div className="text-green-500 text-sm">
+            ↑ {formatNumberWithAffixes(change, "", "%")}
+          </div>
+        )}
       </div>
     );
   };

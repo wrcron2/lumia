@@ -48,8 +48,8 @@ const SankeyDiagram: React.FC<SankeyDiagramProps> = ({
   );
 
   // Define dimensions
-  const width = 700;
-  const height = 900;
+  const width = 900;
+  const height = 1200;
   const margin = { top: 20, right: 80, bottom: 20, left: 80 };
   const nodeWidth = 25;
   const nodePadding = 12;

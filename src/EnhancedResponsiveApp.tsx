@@ -17,7 +17,8 @@ function EnhancedResponsiveApp() {
   const [windowWidth, setWindowWidth] = useState(window.innerWidth);
   const [breakpointIndicator, setBreakpointIndicator] = useState("");
   const { transactions, isLoading, error, reFetch } = useFetchTransactions();
-  const [transactionsByTabRange, setTransactionByTabRange] = useState<TransactionsTabRange>();
+  const [transactionsByTabRange, setTransactionByTabRange] =
+    useState<TransactionsTabRange>();
   // Update window width state on resize
   useEffect(() => {
     const handleResize = () => {
@@ -136,12 +137,11 @@ function EnhancedResponsiveApp() {
         </div>
         {/* Metrics row - stack on mobile, row on tablet+ */}
         <MetricCards />
-      
 
         {/* Visualization grid - changes layout based on screen size */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 h-[48rem]">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* UTM to Demographics flow - full width on mobile/tablet, half width on desktop */}
-          <div className="bg-white border-2 border-orange-200 rounded-lg p-4 relative">
+          <div className="min-h-[30rem] bg-white border-2 border-orange-200 rounded-lg relative">
             {/* <div className="absolute top-0 right-0 bg-orange-100 text-xs px-2 py-1 rounded-bl-lg">
               col-span-1/1 on mobile, col-span-1/2 on lg+
             </div>
@@ -153,33 +153,28 @@ function EnhancedResponsiveApp() {
               </span>
              
             </div> */}
-            <SankeyDiagram nodes={transactionsByTabRange?.utmAgeDemographics.nodes || []} links={transactionsByTabRange?.utmAgeDemographics.links || []} />
+            <SankeyDiagram
+              nodes={transactionsByTabRange?.utmAgeDemographics.nodes || []}
+              links={transactionsByTabRange?.utmAgeDemographics.links || []}
+            />
           </div>
 
           {/* Right column charts - stacked on mobile, side by side in column on large screens */}
-          <div className="flex flex-col  space-y-6 border-2 border-purple-200 p-4 rounded-lg bg-purple-50 relative">
-            <div className="absolute top-0 right-0 bg-purple-100 text-xs px-2 py-1 rounded-bl-lg">
-              col-span-1/1 on mobile, col-span-1/2 on lg+
-            </div>
-            <span className="text-center text-sm text-purple-600">
-              This container uses flex-col layout internally to stack charts
-            </span>
-
+          <div className="flex flex-col h-[48rem]  space-y-6 border-2 border-purple-200  rounded-lg bg-purple-50 relative">
             {/* UTM Source Revenue Attribution */}
-            <div className="h-44 md:h-[240px] bg-white border border-gray-200 rounded-lg p-4">
-              {/* <div className="text-gray-500 mb-2">
+            <div className="flex-1 md:h-full bg-white border border-gray-200 rounded-lg p-4">
+              <div className="h-7 text-gray-500 mb-2">
                 UTM Source / Revenue Attribution
-              </div> */}
-              <CustomPieChart />
-              {/* <div className="w-full h-5/6 border border-dashed border-gray-300 rounded flex items-center justify-center text-gray-400">
-                Donut Chart Placeholder
-              </div> */}
+              </div>
+              <div className="w-full h-6/7 border border-dashed border-gray-300 rounded flex items-center justify-center text-gray-400">
+                <CustomPieChart />
+              </div>
             </div>
 
             {/* Revenue Trend */}
-            <div className="h-44 md:h-[240px] bg-white border border-gray-200 rounded-lg p-4">
+            <div className="flex-1 md:h-full bg-white border border-gray-200 rounded-lg p-4">
               <div className="text-gray-500 mb-2">Revenue Trend</div>
-              <div className="w-full h-5/6 border border-dashed border-gray-300 rounded flex items-center justify-center text-gray-400">
+              <div className="w-full h-6/7 border border-dashed border-gray-300 rounded flex items-center justify-center text-gray-400">
                 Line Chart Placeholder
               </div>
             </div>
