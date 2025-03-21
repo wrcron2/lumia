@@ -1,0 +1,245 @@
+import transactionsService from "../services/transactionsService"
+
+type UtmSourceType = "google" | "facebook" | "instagram" | "tiktok" |
+    "twitter" | "pinterest" | "linkedin"
+
+type GenderType = "male" | "female"
+type DeviceType =  "web" | "mobile"
+
+
+export type AgeGroup = "Under 15" | "15-19" | "20-29" | "30-39" | "40-49" | "50+";
+
+
+export interface Transaction {
+    transaction_id: string,
+    revenue_usd: number,
+    customer_id: string,
+    transaction_time: number,
+    utm_source: UtmSourceType
+    customer_metadata: {
+    birthday_time: number,
+    gender:GenderType
+    country: string,
+    device: DeviceType
+    }
+}
+
+
+
+export interface EnrichedTransaction extends Transaction {
+    age_group: AgeGroup;
+  }
+
+  type UtmAgeDemographicNode = {
+    id: string;
+    name: string;
+    color: string;   
+  }
+
+  type UtmAgeDemographicLink = {
+    source: string;
+    target: string;
+    value: number;
+    color: string;
+  }
+
+export interface UtmAgeDemographicData {
+    nodes: UtmAgeDemographicNode[];
+    links: UtmAgeDemographicLink[];
+  }  
+
+type AgeGroupType = Record<number, Transaction>
+
+
+const utmColors: Record<string, string> = {
+    google: '#FF4545',   // Red
+    facebook: '#4285F4', // Blue
+    instagram: '#C13584', // Purple
+    tiktok: '#000000',   // Black
+    twitter: '#1DA1F2',  // Light blue
+    pinterest: '#E60023', // Red
+    linkedin: '#0A66C2'  // Blue
+ }
+
+ const ageGroupsColors: Record<string, string> = {
+    "Under 15": "#D3D3D3",
+    "15-19": "#B0BEC5",
+    "20-29": "#90A4AE",
+    "30-39": "#78909C",
+    "40-49": "#607D8B",
+    "50+": "#455A64",
+ }
+
+ 
+
+
+
+
+
+
+ class DashboardModel {
+    transactions: Transaction[] = [];
+    utm_Data: UtmAgeDemographicData = { nodes: [], links: [] };
+    transactionsById: { [key: string]: Transaction } = {}
+    transactionsTabRange = {}
+
+
+
+    calculateAgeGroup = (birthdayTimestamp: number, transactionTimestamp: number): AgeGroup => {
+        const ageAtTransaction = (transactionTimestamp - birthdayTimestamp) / (365.25 * 24 * 60 * 60 * 1000);
+        
+        if (ageAtTransaction < 15) return "Under 15";
+        if (ageAtTransaction < 20) return "15-19";
+        if (ageAtTransaction < 30) return "20-29";
+        if (ageAtTransaction < 40) return "30-39";
+        if (ageAtTransaction < 50) return "40-49";
+        return "50+";
+      };
+
+
+      
+
+    getDateRange = (range: string, currentTime = Date.now()): { start: number, end: number, prevStart: number, prevEnd: number } => {
+            const DAY_MS = 24 * 60 * 60  * 1000
+
+            const end = currentTime 
+            let start:number 
+            let prevEnd: number
+            let prevStart: number
+        
+        switch(range) {
+            case "7d": {
+
+                start = end -( 7 * DAY_MS)
+                prevStart = start - 1
+                prevEnd = prevStart - (7 * DAY_MS)
+                break;
+
+            }
+            case "8d": {
+
+                start = end -( 8 * DAY_MS)
+                prevStart = start - 1
+                prevEnd = prevStart - (8 * DAY_MS)
+                break;
+
+            }
+            case "all":
+
+            default: {
+                start = 0
+                prevStart  = 0
+                prevEnd = 0
+            } 
+        }
+
+        return {
+            start,
+            end,
+            prevStart,
+            prevEnd
+        }
+      }
+
+    generateUtmAgeDemographicData(transactions: EnrichedTransaction[]): UtmAgeDemographicData {
+        const utm_sources = [...new Set(transactions.map(transactions => transactions.utm_source))] 
+        
+        const utmSourcesNodes =  utm_sources.map(item => {
+            return {
+                id: item,
+                name: item.charAt(0).toUpperCase() + item.slice(1),
+                color: utmColors[item]
+            }
+        })
+
+        const ageGroupNods = transactions.map(transaction => {
+            const ageGroup = this.calculateAgeGroup(transaction.customer_metadata.birthday_time, transaction.transaction_time)
+
+            return {
+                id: ageGroup,
+                name: ageGroup,
+                color: utmColors[ageGroup]
+            }
+        })
+
+
+        const links:UtmAgeDemographicLink[]  = transactions.map((transaction: EnrichedTransaction) => {
+            const ageGroup = this.calculateAgeGroup(transaction.customer_metadata.birthday_time, transaction.transaction_time)
+            return {
+                source: transaction.utm_source,
+                target: ageGroup,
+                value: transaction.revenue_usd,
+                color: ageGroupsColors[ageGroup]
+            }
+        })
+    
+        return {
+            nodes: [...utmSourcesNodes, ...ageGroupNods],
+            links
+        }
+    }
+    processTransactions = (transactions: Transaction[], dateRang:string) => {
+            const enrichedTransaction: EnrichedTransaction[]  = transactions.map((transaction: Transaction) => {
+                
+                return {
+                    ...transaction,
+                    age_group: this.calculateAgeGroup(transaction.customer_metadata.birthday_time, transaction.transaction_time)
+                }
+
+            })
+
+            const { end, start, prevEnd, prevStart } = this.getDateRange(dateRang)
+
+
+              // Filter transactions for current period
+            const currentTransactions = enrichedTransaction.filter((transaction: EnrichedTransaction) => {
+                return transaction.transaction_time >= start && transaction.transaction_time <= end;
+            })
+
+            // Filter transactions for previous period
+            const previousTransactions = enrichedTransaction.filter((transaction: EnrichedTransaction) => {
+                return transaction.transaction_time >= prevStart && transaction.transaction_time <= prevEnd;
+            });
+
+            // Calculate current metrics
+            const totalRevenue = currentTransactions.reduce((sum, t) => sum + t.revenue_usd, 0);
+            const totalTransactions = currentTransactions.length;
+            const uniqueCustomers = new Set(currentTransactions.map(t => t.customer_id)).size;
+  
+
+            // Calculate previous metrics (for change calculation)
+            const prevRevenue = previousTransactions.reduce((sum, t) => sum + t.revenue_usd, 0);
+            const prevTransactions = previousTransactions.length;
+            const prevUniqueCustomers = new Set(previousTransactions.map(t => t.customer_id)).size;
+
+
+            //calculate percentage change
+            const revenueChange = prevRevenue === 0 ? 0 : ((totalRevenue - prevRevenue) / prevRevenue) * 100;
+            const transactionsChange = prevTransactions === 0 ? 0 : ((totalTransactions - prevTransactions) / prevTransactions) * 100;
+            const uniqueCustomersChange = prevUniqueCustomers === 0 ? 0 : ((uniqueCustomers - prevUniqueCustomers) / prevUniqueCustomers) * 100
+            
+            const utmAgeDemographics = this.generateUtmAgeDemographicData(currentTransactions);
+            this.transactionsTabRange = {
+                totalRevenue,
+                totalTransactions,
+                uniqueCustomers,
+                revenueChange,
+                transactionsChange,
+                uniqueCustomersChange,
+                utmAgeDemographics
+            }
+            return {
+                totalRevenue,
+                totalTransactions,
+                uniqueCustomers,
+                revenueChange,
+                transactionsChange,
+                uniqueCustomersChange,
+                utmAgeDemographics
+            }
+      }
+}
+
+
+
+export default new DashboardModel()
