@@ -170,50 +170,50 @@ const SankeyDiagram: React.FC<SankeyDiagramProps> = ({
   };
 
   return (
-    <div className="flex items-center justify-center w-full h-full">
-      <ResponsiveContainer width="100%" height="100%">
-        <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`}>
-          {/* Render nodes */}
-          {data.nodes.map((node) => (
-            <g key={node.id}>
-              <rect
-                x={node.x0}
-                y={node.y0}
-                width={(node.x1 ?? 0) - (node.x0 ?? 0)}
-                height={(node.y1 ?? 0) - (node.y0 ?? 0)}
-                fill={node.color}
-              />
-              <text
-                x={
-                  sourceNodes.find((sn) => sn.id === node.id)
-                    ? (node.x0 ?? 0) - 10
-                    : (node.x1 ?? 0) + 10
-                }
-                y={((node.y0 ?? 0) + (node.y1 ?? 0)) / 2}
-                dy="0.35em"
-                textAnchor={
-                  sourceNodes.find((sn) => sn.id === node.id) ? "end" : "start"
-                }
-                fill="#000"
-                fontSize={12}
-              >
-                {node.name}
-              </text>
-            </g>
-          ))}
-
-          {/* Render links */}
-          {linkPaths.map((link, i) => (
-            <path
-              key={`link-${i}`}
-              d={createLinkPath(link)}
-              fill={link.color}
-              stroke="none"
+    // <div className="flex items-center justify-center w-full h-full">
+    <ResponsiveContainer width="100%" height="100%">
+      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`}>
+        {/* Render nodes */}
+        {data.nodes.map((node) => (
+          <g key={node.id}>
+            <rect
+              x={node.x0}
+              y={node.y0}
+              width={(node.x1 ?? 0) - (node.x0 ?? 0)}
+              height={(node.y1 ?? 0) - (node.y0 ?? 0)}
+              fill={node.color}
             />
-          ))}
-        </svg>
-      </ResponsiveContainer>
-    </div>
+            <text
+              x={
+                sourceNodes.find((sn) => sn.id === node.id)
+                  ? (node.x0 ?? 0) - 10
+                  : (node.x1 ?? 0) + 10
+              }
+              y={((node.y0 ?? 0) + (node.y1 ?? 0)) / 2}
+              dy="0.35em"
+              textAnchor={
+                sourceNodes.find((sn) => sn.id === node.id) ? "end" : "start"
+              }
+              fill="#000"
+              fontSize={12}
+            >
+              {node.name}
+            </text>
+          </g>
+        ))}
+
+        {/* Render links */}
+        {linkPaths.map((link, i) => (
+          <path
+            key={`link-${i}`}
+            d={createLinkPath(link)}
+            fill={link.color}
+            stroke="none"
+          />
+        ))}
+      </svg>
+    </ResponsiveContainer>
+    // </div>
   );
 };
 
