@@ -48,7 +48,6 @@ export interface UtmAgeDemographicData {
     links: UtmAgeDemographicLink[];
   }  
 
-type AgeGroupType = Record<number, Transaction>
 
 
 const utmColors: Record<string, {nodeColor: string, linkColor: string}> = {
@@ -57,7 +56,7 @@ const utmColors: Record<string, {nodeColor: string, linkColor: string}> = {
     instagram: {nodeColor: '#C13584', linkColor: "rgba(193, 53, 132, 0.4)"}, // Purple
     tiktok: {nodeColor: '#000000', linkColor: 'rgba(0, 0, 0, 0.4)'},   // Black
     twitter: {nodeColor: '#1DA1F2', linkColor: 'rgba(29, 161, 242, 0.4)'},  // Light blue
-    pinterest: {nodeColor: '#E60023', linkColor: 'rgba(230, 0, 35, 0.4)'}, // Red
+    pinterest: {nodeColor: '#E60073', linkColor: 'rgba(230, 0, 35, 0.4)'}, // Red
     linkedin: {nodeColor: '#0A66C2', linkColor: 'rgba(10, 102, 194, 0.4)'}  // Blue
  }
 
@@ -79,7 +78,16 @@ const utmColors: Record<string, {nodeColor: string, linkColor: string}> = {
     transactionsChange: number;
     // uniqueCustomersChange: number;
     utmAgeDemographics: UtmAgeDemographicData;
+    revenueAttributionData: DataAttribution[];
   } 
+
+
+  export interface DataAttribution {
+        name: string;
+        value: number;
+        color: string;
+        label: string;
+  }
  
 
 
@@ -104,6 +112,7 @@ const ageObjectColors = [
         uniqueCustomers: 0,
         revenueChange: 0,
         transactionsChange: 0,
+        revenueAttributionData: [],
         // uniqueCustomersChange: 0,
         utmAgeDemographics: { nodes: [], links: [] },
       };
@@ -165,8 +174,41 @@ const ageObjectColors = [
         }
       }
 
-    generateUtmAgeDemographicData(transactions: EnrichedTransaction[]): UtmAgeDemographicData {
-        const utm_sources = [...new Set(transactions.map(transactions => transactions.utm_source))] 
+    generateRevenueAttributionData = (transactions: EnrichedTransaction[], utm_sources: string[]): DataAttribution[] => {
+/*
+Present a breakdown of how transactions are distributed among the different
+marketing channels, highlighting the percentage share for each source.
+
+*/
+        
+        const sourceGroup = transactions.reduce((acc, transaction) => {
+            if(!acc[transaction.utm_source]) {
+                acc[transaction.utm_source] = 0
+            }   
+            return {
+                ...acc,
+                [transaction.utm_source]: acc[transaction.utm_source] + 1
+            }
+        }, {} as Record<string, number>)
+        const revenueByUtmSource = utm_sources.map((utm_source: string) => {
+            if(!utm_source) {
+                console.log("No utm source")
+            }
+            return {
+                name: utm_source,
+                value: Math.round(((sourceGroup[utm_source] || 0) / transactions.length) * 100),
+                // value: transactions.filter(transaction => transaction.utm_source === utm_source)
+                // .reduce((sum, t) => sum + t.revenue_usd, 0),
+                color: utmColors[utm_source].nodeColor,
+                label: utm_source.charAt(0).toUpperCase() + utm_source.slice(1)
+            }
+        })
+
+        return revenueByUtmSource;
+    }
+
+    generateUtmAgeDemographicData(transactions: EnrichedTransaction[],utm_sources: string[] ): UtmAgeDemographicData {
+        // ["google", "facebook", "instagram", "tiktok", "twitter", "pinterest", "linkedin"]
         // ["Under 15", "15-19", "20-29", "30-39", "40-49"] 
         const utmSourcesNodes =  utm_sources.map(item => {
             return {
@@ -193,7 +235,8 @@ const ageObjectColors = [
             links
         }
     }
-    processTransactions = (transactions: Transaction[], dateRang:string) => {
+   processTransactions = (transactions: Transaction[], dateRang:string) => {
+    const utm_sources = [...new Set(transactions.map(transactions => transactions.utm_source))] 
             const enrichedTransaction: EnrichedTransaction[]  = transactions.map((transaction: Transaction) => {
                 
                 return {
@@ -203,7 +246,7 @@ const ageObjectColors = [
 
             })
 
-            const { end, start, prevEnd, prevStart } = this.getDateRange(dateRang)
+            const { end, start , prevEnd, prevStart } = this.getDateRange(dateRang)
 
 
               // Filter transactions for current period
@@ -233,7 +276,8 @@ const ageObjectColors = [
             const transactionsChange = prevTransactions === 0 ? 0 : ((totalTransactions - prevTransactions) / prevTransactions) * 100;
             // const uniqueCustomersChange = prevUniqueCustomers === 0 ? 0 : ((uniqueCustomers - prevUniqueCustomers) / prevUniqueCustomers) * 100
             
-            const utmAgeDemographics = this.generateUtmAgeDemographicData(currentTransactions);
+            const utmAgeDemographics = this.generateUtmAgeDemographicData(currentTransactions, utm_sources);
+            const revenueAttributionData = this.generateRevenueAttributionData(currentTransactions, utm_sources);
             this.transactionsTabRange = {
                 totalRevenue,
                 totalTransactions,
@@ -241,7 +285,8 @@ const ageObjectColors = [
                 revenueChange,
                 transactionsChange,
                 // uniqueCustomersChange,
-                utmAgeDemographics
+                utmAgeDemographics,
+                revenueAttributionData
             }
             return {
                 totalRevenue,
@@ -250,7 +295,8 @@ const ageObjectColors = [
                 revenueChange,
                 transactionsChange,
                 // uniqueCustomersChange,
-                utmAgeDemographics
+                utmAgeDemographics,
+                revenueAttributionData
             }
       }
 }

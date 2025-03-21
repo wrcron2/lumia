@@ -1,6 +1,6 @@
-
 import React, { useState, useEffect, useRef } from "react";
 import { PieChart, Pie, Cell, ResponsiveContainer, Sector } from "recharts";
+import DashboardModel, { DataAttribution } from "../models/DashboardModel";
 
 interface DataItem {
   name: string;
@@ -23,19 +23,16 @@ interface RenderActiveShapeProps {
   midAngle: number;
 }
 
-const ResponsiveCustomPieChart = () => {
+interface RevenueAttributionGraphProps {
+  data: DataAttribution[];
+}
+
+const RevenueAttributionGraph: React.FC<RevenueAttributionGraphProps> = ({
+  data,
+}) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const [containerSize, setContainerSize] = useState({ width: 0, height: 0 });
   const [isMobile, setIsMobile] = useState(false);
-
-  // Data for the chart - ordered clockwise from top
-  const data: DataItem[] = [
-    { name: "Facebook", value: 30, color: "#1877F2", label: "Facebook" }, // Blue
-    { name: "Instagram", value: 25, color: "#A259FF", label: "Instagram" }, // Purple
-    { name: "Other", value: 20, color: "#FFC857", label: "Other" }, // Yellow
-    { name: "None", value: 15, color: "#4BD0A0", label: "None" }, // Green
-    { name: "Google", value: 10, color: "#FF4655", label: "Google" }, // Red
-  ];
 
   useEffect(() => {
     const handleResize = () => {
@@ -80,8 +77,8 @@ const ResponsiveCustomPieChart = () => {
     const minDimension = Math.min(containerSize.width, containerSize.height);
 
     return {
-      innerRadius: Math.max(minDimension * 0.15, 30),
-      outerRadius: Math.max(minDimension * 0.25, 60),
+      innerRadius: Math.max(minDimension * 0.25, 30),
+      outerRadius: Math.max(minDimension * 0.35, 60),
       labelOffset: isMobile ? 15 : 30,
     };
   };
@@ -166,18 +163,17 @@ const ResponsiveCustomPieChart = () => {
   return (
     <div
       ref={containerRef}
-      className="relative w-full h-full flex items-center justify-center"
-      style={{ minHeight: "200px" }}
+      className="pb-6 relative w-full h-full flex items-center justify-center min-h-[12.5rem] sm:pb-0"
     >
       {/* Background white circle with shadow */}
       <div
         className="absolute bg-white rounded-full"
         style={{
           width: `${
-            Math.min(containerSize.width, containerSize.height) * 0.65
+            Math.min(containerSize.width, containerSize.height) * 0.75
           }px`,
           height: `${
-            Math.min(containerSize.width, containerSize.height) * 0.65
+            Math.min(containerSize.width, containerSize.height) * 0.75
           }px`,
           boxShadow: "0 0 40px rgba(0, 0, 0, 0.09)",
         }}
@@ -197,7 +193,7 @@ const ResponsiveCustomPieChart = () => {
             startAngle={90}
             endAngle={-270}
             activeShape={renderActiveShape as any}
-            activeIndex={[0, 1, 2, 3, 4]} // Make all sectors active to show labels
+            activeIndex={data.map((_, index) => index)}
             isAnimationActive={false} // Disable animation for exact appearance
           >
             {data.map((entry, index) => (
@@ -212,4 +208,4 @@ const ResponsiveCustomPieChart = () => {
   );
 };
 
-export default ResponsiveCustomPieChart;
+export default RevenueAttributionGraph;

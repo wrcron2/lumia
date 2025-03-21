@@ -1,10 +1,11 @@
 import React, { useState, useEffect, use } from "react";
 import { TimeRangeTab, TimeRangeTabMap } from "./models/TabModel";
 import SankeyDiagram from "./components/sankyDiagram";
-import CustomPieChart from "./components/customPieChart";
+import CustomPieChart from "./components/revenueAttributionGraph";
 import DashboardModel, { TransactionsTabRange } from "./models/DashboardModel";
 import { useFetchTransactions } from "./hooks/fetchTransaction";
 import { MetricCards } from "./components/metricCard";
+import AreaChartChart from "./components/areaChart";
 
 // Tabs for mobile view
 const tabs = ["Dashboard", "Analytics", "Settings"];
@@ -167,7 +168,12 @@ function EnhancedResponsiveApp() {
                 UTM Source / Revenue Attribution
               </div>
               <div className="w-full h-6/7 border border-dashed border-gray-300 rounded flex items-center justify-center text-gray-400">
-                <CustomPieChart />
+                <CustomPieChart
+                  data={
+                    DashboardModel?.transactionsTabRange
+                      ?.revenueAttributionData || []
+                  }
+                />
               </div>
             </div>
 
@@ -175,7 +181,7 @@ function EnhancedResponsiveApp() {
             <div className="flex-1 md:h-full bg-white border border-gray-200 rounded-lg p-4">
               <div className="text-gray-500 mb-2">Revenue Trend</div>
               <div className="w-full h-6/7 border border-dashed border-gray-300 rounded flex items-center justify-center text-gray-400">
-                Line Chart Placeholder
+                <AreaChartChart />
               </div>
             </div>
           </div>

@@ -14,7 +14,7 @@ class  TransactionsService {
         try {
             const response = await fetch(TransactionsURL)
             const data = await response.json()
-            return data;
+            return data
         } catch(error) {
             throw new Error("");
         }
