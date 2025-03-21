@@ -2,7 +2,7 @@ import React, { useState, useEffect, use } from "react";
 import { TimeRangeTab, TimeRangeTabMap } from "./models/TabModel";
 import SankeyDiagram from "./components/sankyDiagram";
 import CustomPieChart from "./components/customPieChart";
-import DashboardModel from "./models/DashboardModel";
+import DashboardModel, { TransactionsTabRange } from "./models/DashboardModel";
 import { useFetchTransactions } from "./hooks/fetchTransaction";
 
 // Tabs for mobile view
@@ -16,7 +16,7 @@ function EnhancedResponsiveApp() {
   const [windowWidth, setWindowWidth] = useState(window.innerWidth);
   const [breakpointIndicator, setBreakpointIndicator] = useState("");
   const { transactions, isLoading, error, reFetch } = useFetchTransactions();
-  const [transactionsByTabRange, setTransactionByTabRange] = useState({});
+  const [transactionsByTabRange, setTransactionByTabRange] = useState<TransactionsTabRange>();
   // Update window width state on resize
   useEffect(() => {
     const handleResize = () => {
@@ -49,7 +49,7 @@ function EnhancedResponsiveApp() {
   useEffect(() => {}, []);
 
   const memoizedTransactions = React.useMemo(() => {
-    return DashboardModel.processTransactions(transactions, "Last7Days");
+    return DashboardModel.processTransactions(transactions, "30d");
   }, [transactions]);
 
   useEffect(() => {
@@ -179,7 +179,7 @@ function EnhancedResponsiveApp() {
               </span>
              
             </div> */}
-            <SankeyDiagram />
+            <SankeyDiagram nodes={transactionsByTabRange?.utmAgeDemographics.nodes || []} links={transactionsByTabRange?.utmAgeDemographics.links || []} />
           </div>
 
           {/* Right column charts - stacked on mobile, side by side in column on large screens */}

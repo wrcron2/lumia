@@ -30,13 +30,13 @@ export interface EnrichedTransaction extends Transaction {
     age_group: AgeGroup;
   }
 
-  type UtmAgeDemographicNode = {
+  export type UtmAgeDemographicNode = {
     id: string;
     name: string;
     color: string;   
   }
 
-  type UtmAgeDemographicLink = {
+  export type UtmAgeDemographicLink = {
     source: string;
     target: string;
     value: number;
@@ -70,18 +70,42 @@ const utmColors: Record<string, string> = {
     "50+": "#455A64",
  }
 
+
+ export interface TransactionsTabRange {
+    totalRevenue: number;
+    totalTransactions: number;
+    uniqueCustomers: number;
+    revenueChange: number;
+    transactionsChange: number;
+    uniqueCustomersChange: number;
+    utmAgeDemographics: UtmAgeDemographicData;
+  } 
  
 
 
-
-
+const ageObjectColors = [
+    { id: '15-19', name: '15-19', color: '#D3D3D3' },
+    { id: '20-29', name: '20-29', color: '#B0BEC5' },
+    { id: '30-39', name: '30-39', color: '#90A4AE' },
+    { id: '40-49', name: '40-49', color: '#78909C' },
+    { id: '50+', name: '50+', color: '#37474F' }
+]
 
 
  class DashboardModel {
     transactions: Transaction[] = [];
     utm_Data: UtmAgeDemographicData = { nodes: [], links: [] };
     transactionsById: { [key: string]: Transaction } = {}
-    transactionsTabRange = {}
+    transactionsTabRange: TransactionsTabRange = {
+        totalRevenue: 0,
+        totalTransactions: 0,
+        uniqueCustomers: 0,
+        revenueChange: 0,
+        transactionsChange: 0,
+        uniqueCustomersChange: 0,
+        utmAgeDemographics: { nodes: [], links: [] },
+      };
+
 
 
 
@@ -116,11 +140,11 @@ const utmColors: Record<string, string> = {
                 break;
 
             }
-            case "8d": {
+            case "30d": {
 
-                start = end -( 8 * DAY_MS)
+                start = end -( 30 * DAY_MS)
                 prevStart = start - 1
-                prevEnd = prevStart - (8 * DAY_MS)
+                prevEnd = prevStart - (30 * DAY_MS)
                 break;
 
             }
@@ -143,22 +167,12 @@ const utmColors: Record<string, string> = {
 
     generateUtmAgeDemographicData(transactions: EnrichedTransaction[]): UtmAgeDemographicData {
         const utm_sources = [...new Set(transactions.map(transactions => transactions.utm_source))] 
-        
+        // ["Under 15", "15-19", "20-29", "30-39", "40-49"] 
         const utmSourcesNodes =  utm_sources.map(item => {
             return {
                 id: item,
                 name: item.charAt(0).toUpperCase() + item.slice(1),
                 color: utmColors[item]
-            }
-        })
-
-        const ageGroupNods = transactions.map(transaction => {
-            const ageGroup = this.calculateAgeGroup(transaction.customer_metadata.birthday_time, transaction.transaction_time)
-
-            return {
-                id: ageGroup,
-                name: ageGroup,
-                color: utmColors[ageGroup]
             }
         })
 
@@ -174,7 +188,7 @@ const utmColors: Record<string, string> = {
         })
     
         return {
-            nodes: [...utmSourcesNodes, ...ageGroupNods],
+            nodes: [...utmSourcesNodes, ...ageObjectColors],
             links
         }
     }

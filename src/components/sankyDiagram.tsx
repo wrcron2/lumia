@@ -1,7 +1,12 @@
 import React from "react";
 import { ResponsiveContainer } from "recharts";
+import {
+  UtmAgeDemographicData,
+  UtmAgeDemographicLink,
+  UtmAgeDemographicNode,
+} from "../models/DashboardModel";
 
-interface Node {
+interface Node extends UtmAgeDemographicNode {
   id: string;
   name: string;
   color: string;
@@ -11,11 +16,7 @@ interface Node {
   y1?: number;
 }
 
-interface Link {
-  source: string;
-  target: string;
-  value: number;
-  color: string;
+interface Link extends UtmAgeDemographicLink {
   sourceX?: number;
   sourceY?: number;
   sourceHeight?: number;
@@ -24,117 +25,20 @@ interface Link {
   targetHeight?: number;
 }
 
+interface SankeyDiagramProps {
+  nodes: Node[];
+  links: Link[];
+}
+
 // Custom Sankey Diagram Implementation
-const SankeyDiagram = () => {
+const SankeyDiagram: React.FC<SankeyDiagramProps> = ({
+  nodes = [],
+  links = [],
+}) => {
   // Data for our diagram
   const data = {
-    nodes: [
-      { id: "google", name: "Google", color: "#E34C4F" },
-      { id: "facebook", name: "Facebook", color: "#4267B2" },
-      { id: "instagram", name: "Instagram", color: "#C13584" },
-      { id: "15-19", name: "15-19", color: "#D3D3D3" },
-      { id: "20-29", name: "20-29", color: "#B0BEC5" },
-      { id: "30-39", name: "30-39", color: "#90A4AE" },
-      { id: "40-49", name: "40-49", color: "#78909C" },
-      { id: "50+", name: "50+", color: "#37474F" },
-    ] as Node[],
-    links: [
-      // Google links
-      {
-        source: "google",
-        target: "15-19",
-        value: 22,
-        color: "rgba(227, 76, 79, 0.4)",
-      },
-      {
-        source: "google",
-        target: "20-29",
-        value: 28,
-        color: "rgba(227, 76, 79, 0.4)",
-      },
-      {
-        source: "google",
-        target: "30-39",
-        value: 25,
-        color: "rgba(227, 76, 79, 0.4)",
-      },
-      {
-        source: "google",
-        target: "40-49",
-        value: 15,
-        color: "rgba(227, 76, 79, 0.4)",
-      },
-      {
-        source: "google",
-        target: "50+",
-        value: 10,
-        color: "rgba(227, 76, 79, 0.4)",
-      },
-
-      // Facebook links
-      {
-        source: "facebook",
-        target: "15-19",
-        value: 18,
-        color: "rgba(66, 103, 178, 0.4)",
-      },
-      {
-        source: "facebook",
-        target: "20-29",
-        value: 25,
-        color: "rgba(66, 103, 178, 0.4)",
-      },
-      {
-        source: "facebook",
-        target: "30-39",
-        value: 30,
-        color: "rgba(66, 103, 178, 0.4)",
-      },
-      {
-        source: "facebook",
-        target: "40-49",
-        value: 17,
-        color: "rgba(66, 103, 178, 0.4)",
-      },
-      {
-        source: "facebook",
-        target: "50+",
-        value: 10,
-        color: "rgba(66, 103, 178, 0.4)",
-      },
-
-      // Instagram links
-      {
-        source: "instagram",
-        target: "15-19",
-        value: 35,
-        color: "rgba(193, 53, 132, 0.4)",
-      },
-      {
-        source: "instagram",
-        target: "20-29",
-        value: 30,
-        color: "rgba(193, 53, 132, 0.4)",
-      },
-      {
-        source: "instagram",
-        target: "30-39",
-        value: 20,
-        color: "rgba(193, 53, 132, 0.4)",
-      },
-      {
-        source: "instagram",
-        target: "40-49",
-        value: 10,
-        color: "rgba(193, 53, 132, 0.4)",
-      },
-      {
-        source: "instagram",
-        target: "50+",
-        value: 5,
-        color: "rgba(193, 53, 132, 0.4)",
-      },
-    ],
+    nodes,
+    links,
   };
 
   // Calculate total values for scaling
@@ -155,8 +59,10 @@ const SankeyDiagram = () => {
   const innerHeight = height - margin.top - margin.bottom;
 
   // Calculate node positions
-  const sourceNodes = data.nodes.slice(0, 3); // Google, Facebook, Instagram
-  const targetNodes = data.nodes.slice(3); // Age groups
+  // filter out items with string id that includes numbers  use regex
+  const sourceNodes = data.nodes.filter((node) => /^[a-zA-Z]+$/.test(node.id)); // Google, Facebook, Instagram
+  // filter out items  with string id that not  includes names
+  const targetNodes = data.nodes.filter((node) => !/^[a-zA-Z]+$/.test(node.id)); // 15-19, 20-29, 30-39, 40-49, 50+
 
   // Source node positions (left side)
   sourceNodes.forEach((node, i) => {
@@ -279,20 +185,14 @@ const SankeyDiagram = () => {
               />
               <text
                 x={
-                  node.id === "google" ||
-                  node.id === "facebook" ||
-                  node.id === "instagram"
+                  sourceNodes.find((sn) => sn.id === node.id)
                     ? (node.x0 ?? 0) - 10
                     : (node.x1 ?? 0) + 10
                 }
                 y={((node.y0 ?? 0) + (node.y1 ?? 0)) / 2}
                 dy="0.35em"
                 textAnchor={
-                  node.id === "google" ||
-                  node.id === "facebook" ||
-                  node.id === "instagram"
-                    ? "end"
-                    : "start"
+                  sourceNodes.find((sn) => sn.id === node.id) ? "end" : "start"
                 }
                 fill="#000"
                 fontSize={12}
