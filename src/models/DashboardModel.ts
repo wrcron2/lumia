@@ -1,4 +1,3 @@
-
 type UtmSourceType =
   | "google"
   | "facebook"
@@ -85,7 +84,6 @@ export const utmColors: Record<
   linkedin: { nodeColor: "#0A66C2", linkColor: "rgba(10, 102, 194, 0.4)" }, // Blue
 };
 
-
 export interface TransactionsTabRange {
   totalRevenue: number;
   totalTransactions: number;
@@ -104,6 +102,13 @@ export interface DataAttribution {
   color: string;
   label: string;
 }
+
+export type TransactionFilters = {
+  utms: string[];
+  gender: string[];
+  ageGroups: string[];
+  revenue: number[];
+};
 
 export const ageObjectColors = [
   { id: "15-19", name: "15-19", color: "#D3D3D3" },
@@ -347,27 +352,46 @@ class DashboardModel {
     });
   };
 
-  processTransactions = (transactions: Transaction[], dateRang: number) => {
+  processTransactions = (
+    transactions: Transaction[],
+    dateRang: number,
+
+    filters: TransactionFilters = {
+      utms: [],
+      gender: [],
+      ageGroups: [],
+      revenue: [],
+    }
+  ) => {
+    // Apply any necessary UTM and Gender filters here
+    transactions = transactions.filter((t) => {
+      const utmMatch =
+        filters.utms.length === 0 || filters.utms.includes(t.utm_source);
+
+      const genderMatch =
+        filters.gender.length === 0 ||
+        filters.gender.includes(t.customer_metadata.gender);
+
+      return utmMatch && genderMatch;
+    });
+
     this.transactions = transactions;
     this.dateRange = dateRang;
     const utm_sources = this.getUTMSources(transactions);
-    // const enrichedTransaction: EnrichedTransaction[] = transactions.map(
-    //   (transaction: Transaction) => {
-    //     return {
-    //       ...transaction,
-    //       age_group: this.calculateAgeGroup(
-    //         transaction.customer_metadata.birthday_time,
-    //         transaction.transaction_time
-    //       ),
-    //     };
-    //   }
-    // );
-    const enrichedTransaction: EnrichedTransaction[] =
+
+    let enrichedTransaction: EnrichedTransaction[] =
       this.getEnrichedTransactions(transactions);
+
+    // Apply age group filter
+    enrichedTransaction = enrichedTransaction.filter((t) => {
+      return (
+        filters.ageGroups.length === 0 ||
+        filters.ageGroups.includes(t.age_group)
+      );
+    });
 
     const { end, start, prevEnd, prevStart } = this.getDateRange(dateRang);
 
-    // Filter transactions for current period
     const currentTransactions = enrichedTransaction.filter(
       (transaction: EnrichedTransaction) => {
         return (
@@ -377,7 +401,6 @@ class DashboardModel {
       }
     );
 
-    // Filter transactions for previous period
     const previousTransactions = enrichedTransaction.filter(
       (transaction: EnrichedTransaction) => {
         return (
@@ -387,7 +410,6 @@ class DashboardModel {
       }
     );
 
-    // Calculate current metrics
     const totalRevenue = currentTransactions.reduce(
       (sum, t) => sum + t.revenue_usd,
       0
@@ -397,15 +419,11 @@ class DashboardModel {
       currentTransactions.map((t) => t.customer_id)
     ).size;
 
-    // Calculate previous metrics (for change calculation)
     const prevRevenue = previousTransactions.reduce(
       (sum, t) => sum + t.revenue_usd,
       0
     );
     const prevTransactions = previousTransactions.length;
-    // const prevUniqueCustomers = new Set(
-    //   previousTransactions.map((t) => t.customer_id)
-    // ).size;
 
     //calculate percentage change
     const revenueChange =
@@ -416,7 +434,6 @@ class DashboardModel {
       prevTransactions === 0
         ? 0
         : ((totalTransactions - prevTransactions) / prevTransactions) * 100;
-    // const uniqueCustomersChange = prevUniqueCustomers === 0 ? 0 : ((uniqueCustomers - prevUniqueCustomers) / prevUniqueCustomers) * 100
 
     const utmAgeDemographics = this.generateUtmAgeDemographicData(
       currentTransactions,

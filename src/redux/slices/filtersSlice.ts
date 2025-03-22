@@ -1,23 +1,31 @@
-import { createSlice } from "@reduxjs/toolkit";
+import { createSlice, PayloadAction } from "@reduxjs/toolkit";
+import { TransactionFilters } from "../../models/DashboardModel";
 
-const initialState = {
-  filters: {
-    UTMSource: [],
-    AgeGroup: [],
-    Revenue: [],
-    DateRange: [],
-
-  },
+const initialState: TransactionFilters = {
+  utms: [],
+  gender: [],
+  ageGroups: [],
+  revenue: [],
 };
 
 const filtersSlice = createSlice({
   name: "filters",
   initialState,
   reducers: {
-    updateSearchTerm: (state, action) => {
+    setUtmmFilter: (state, action: PayloadAction<string[]>) => {
+      state.utms = action.payload;
+    },
+    setGenderFilter: (state, action: PayloadAction<string[]>) => {
+      state.gender = action.payload;
+    },
+    setAgeGroupFilter: (state, action: PayloadAction<string[]>) => {
+      state.ageGroups = action.payload;
+    },
+    setRevenueFilter: (state, action: PayloadAction<number[]>) => {
+      state.revenue = action.payload;
     },
   },
 });
-export const { updateSearchTerm } = filtersSlice.actions;
+export const filtersActions = filtersSlice.actions;
 
 export default filtersSlice.reducer;
