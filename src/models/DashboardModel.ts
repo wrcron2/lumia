@@ -20,6 +20,18 @@ export type AgeGroup =
   | "40-49"
   | "50+";
 
+export enum TimeRangeTab {
+  Last7Days = 1,
+  Last30Days,
+  AllTime,
+}
+
+export const TimeRangeTabMap: Record<TimeRangeTab, string> = {
+  [TimeRangeTab.Last7Days]: "Last 7 Days",
+  [TimeRangeTab.Last30Days]: "Last 30 Days",
+  [TimeRangeTab.AllTime]: "All Time",
+};
+
 export interface Transaction {
   transaction_id: string;
   revenue_usd: number;
@@ -61,7 +73,10 @@ export interface revenueTrendData {
   revenue: number;
 }
 
-const utmColors: Record<string, { nodeColor: string; linkColor: string }> = {
+export const utmColors: Record<
+  string,
+  { nodeColor: string; linkColor: string }
+> = {
   google: { nodeColor: "#FF4545", linkColor: "rgba(227, 76, 79, 0.4)" },
   facebook: { nodeColor: "#4285F4", linkColor: "rgba(66, 103, 178, 0.4)" },
   instagram: { nodeColor: "#C13584", linkColor: "rgba(193, 53, 132, 0.4)" }, // Purple
@@ -99,7 +114,7 @@ export interface DataAttribution {
   label: string;
 }
 
-const ageObjectColors = [
+export const ageObjectColors = [
   { id: "15-19", name: "15-19", color: "#D3D3D3" },
   { id: "20-29", name: "20-29", color: "#B0BEC5" },
   { id: "30-39", name: "30-39", color: "#90A4AE" },
@@ -109,6 +124,8 @@ const ageObjectColors = [
 
 class DashboardModel {
   transactions: Transaction[] = [];
+  dateRange: number = 1;
+  utm_sources: string[] = [];
   utm_Data: UtmAgeDemographicData = { nodes: [], links: [] };
   transactionsById: { [key: string]: Transaction } = {};
   transactionsTabRange: TransactionsTabRange = {
@@ -183,7 +200,6 @@ class DashboardModel {
     transactions: EnrichedTransaction[],
     utm_sources: string[]
   ): DataAttribution[] => {
-
     const totalRevenue = transactions.reduce(
       (sum, transaction) => sum + transaction.revenue_usd,
       0
@@ -321,21 +337,42 @@ class DashboardModel {
       links,
     };
   }
-  processTransactions = (transactions: Transaction[], dateRang: number) => {
-    const utm_sources = [
+
+  getUTMSources = (transactions: Transaction[]) => {
+    return [
       ...new Set(transactions.map((transactions) => transactions.utm_source)),
     ];
-    const enrichedTransaction: EnrichedTransaction[] = transactions.map(
-      (transaction: Transaction) => {
-        return {
-          ...transaction,
-          age_group: this.calculateAgeGroup(
-            transaction.customer_metadata.birthday_time,
-            transaction.transaction_time
-          ),
-        };
-      }
-    );
+  };
+
+  getEnrichedTransactions = (transactions: Transaction[]) => {
+    return transactions.map((transaction: Transaction) => {
+      return {
+        ...transaction,
+        age_group: this.calculateAgeGroup(
+          transaction.customer_metadata.birthday_time,
+          transaction.transaction_time
+        ),
+      };
+    });
+  };
+
+  processTransactions = (transactions: Transaction[], dateRang: number) => {
+    this.transactions = transactions;
+    this.dateRange = dateRang;
+    const utm_sources = this.getUTMSources(transactions);
+    // const enrichedTransaction: EnrichedTransaction[] = transactions.map(
+    //   (transaction: Transaction) => {
+    //     return {
+    //       ...transaction,
+    //       age_group: this.calculateAgeGroup(
+    //         transaction.customer_metadata.birthday_time,
+    //         transaction.transaction_time
+    //       ),
+    //     };
+    //   }
+    // );
+    const enrichedTransaction: EnrichedTransaction[] =
+      this.getEnrichedTransactions(transactions);
 
     const { end, start, prevEnd, prevStart } = this.getDateRange(dateRang);
 

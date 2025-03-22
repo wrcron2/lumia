@@ -1,10 +1,12 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { ResponsiveContainer } from "recharts";
-import {
+import DashboardModel, {
   UtmAgeDemographicData,
   UtmAgeDemographicLink,
   UtmAgeDemographicNode,
 } from "../models/DashboardModel";
+import { useSelector } from "react-redux";
+import { RootState } from "../redux/store";
 
 interface Node extends UtmAgeDemographicNode {
   id: string;
@@ -31,21 +33,27 @@ interface SankeyDiagramProps {
 }
 
 // Custom Sankey Diagram Implementation
-const SankeyDiagram: React.FC<SankeyDiagramProps> = ({
-  nodes = [],
-  links = [],
-}) => {
-  // Data for our diagram
-  const data = {
-    nodes,
-    links,
-  };
+const SankeyDiagram: React.FC<SankeyDiagramProps> = React.memo( ({ nodes, links }) => {
+  const [dataGroup, setData] = useState<SankeyDiagramProps>({ nodes, links });
+  const [keyGrpahData, setKeyGraphData] = useState<number>(0);
+  const updateKey = useSelector((s: RootState) => s.ageGroup.updateKey);
 
-  // Calculate total values for scaling
-  const totalSourceValue = data.links.reduce(
-    (sum, link) => sum + link.value,
-    0
-  );
+  const isLoading = useSelector((s: RootState) => s.ageGroup.processLoading);
+  console.log("rendering SankeyDiagram");
+
+  useEffect(() => {
+    if (!isLoading && updateKey) {
+      setData(DashboardModel.transactionsTabRange.utmAgeDemographics);
+    }
+  }, [isLoading, updateKey]);
+
+  const data = {...dataGroup}
+
+
+
+  if (data.nodes.length === 0) {
+    return <div>Loading...</div>;
+  }
 
   // Define dimensions
   const width = 900;
@@ -63,6 +71,16 @@ const SankeyDiagram: React.FC<SankeyDiagramProps> = ({
   const sourceNodes = data.nodes.filter((node) => /^[a-zA-Z]+$/.test(node.id)); // Google, Facebook, Instagram
   // filter out items  with string id that not  includes names
   const targetNodes = data.nodes.filter((node) => !/^[a-zA-Z]+$/.test(node.id)); // 15-19, 20-29, 30-39, 40-49, 50+
+
+  // // Deep clone nodes before modifying them
+  // const sourceNodes: Node[] = JSON.parse(
+  //   JSON.stringify(data.nodes.filter((node) => /^[a-zA-Z]+$/.test(node.id)))
+  // );
+
+  // // Deep clone target nodes too
+  // const targetNodes: Node[] = JSON.parse(
+  //   JSON.stringify(data.nodes.filter((node) => !/^[a-zA-Z]+$/.test(node.id)))
+  // );
 
   // Source node positions (left side)
   sourceNodes.forEach((node, i) => {
@@ -171,7 +189,7 @@ const SankeyDiagram: React.FC<SankeyDiagramProps> = ({
 
   return (
     // <div className="flex items-center justify-center w-full h-full">
-    <ResponsiveContainer width="100%" height="100%">
+    <ResponsiveContainer key={keyGrpahData} width="100%" height="100%">
       <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`}>
         {/* Render nodes */}
         {data.nodes.map((node) => (
@@ -215,6 +233,6 @@ const SankeyDiagram: React.FC<SankeyDiagramProps> = ({
     </ResponsiveContainer>
     // </div>
   );
-};
+});
 
 export default SankeyDiagram;

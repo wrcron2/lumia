@@ -1,8 +1,11 @@
 import React, { useState, useEffect, use, useLayoutEffect } from "react";
-import { TimeRangeTab, TimeRangeTabMap } from "./models/TabModel";
+import { TimeRangeTab, TimeRangeTabMap } from "./models/DashboardModel";
 import DashboardModel, { TransactionsTabRange } from "./models/DashboardModel";
 import { useFetchTransactions } from "./hooks/fetchTransaction";
 import LoadingPage from "./views/loadingPage";
+import { useAppSelector, useAppDispatch } from "./redux/hooks";
+import { AppDispatch } from "./redux/store";
+import { ageGroupActions } from "./redux/slices/ageGroupSlice";
 
 // Lazy load components that should only load after loading is complete
 const SankeyDiagram = React.lazy(() => import("./components/sankyDiagram"));
@@ -19,13 +22,16 @@ const DailyRevenueTrend = React.lazy(
 );
 
 // Tabs for mobile view
-const tabs = ["Dashboard", "Analytics", "Settings"];
+const tabs = ["Last 7 Days", "Last 30 Days", "All Time"];
 
 function EnhancedResponsiveApp() {
+  const dispatch = useAppDispatch<AppDispatch>();
+
   const [activeTab, setActiveTab] = useState("Dashboard");
   const [selectedDaysTab, setSelectedDaysTab] = useState(
     TimeRangeTab.Last7Days
   );
+
   const [windowWidth, setWindowWidth] = useState(window.innerWidth);
   const [breakpointIndicator, setBreakpointIndicator] = useState("");
   const { transactions, isLoading, error, reFetch } = useFetchTransactions();
@@ -60,16 +66,42 @@ function EnhancedResponsiveApp() {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  // useLayoutEffect(() => {}, []);
-
   const memoizedTransactions = React.useMemo(() => {
     return DashboardModel.processTransactions(transactions, selectedDaysTab);
   }, [transactions, selectedDaysTab]);
 
   useEffect(() => {
+    dispatch(
+      ageGroupActions.setLoading(true)
+    );
     const t = memoizedTransactions;
     setTransactionByTabRange(t);
+    dispatch(
+      ageGroupActions.setLoading(false)
+    );
   }, [memoizedTransactions]);
+
+  // useLayoutEffect(() => {}, []);
+
+  // const memoizedTransactions = React.useMemo(() => {
+  //   if (isLoading) {
+  //     return transactions;
+  //   }
+  //   // Only do the data transformation here, not dispatch
+  //   return [];
+  // }, [transactions, selectedDaysTab]);
+
+  // // Move the dispatch to its own useEffect
+  // useEffect(() => {
+  //   if (!isLoading && transactions.length > 0) {
+  //     DashboardModel.processTransactions(transactions, selectedDaysTab);
+  //     // dispatch(
+  //     //   ageGroupActions.initProcess({
+  //     //     processData: { transactions, timeRange: selectedDaysTab },
+  //     //   })
+  //     // );
+  //   }
+  // }, [dispatch, isLoading, transactions.length, selectedDaysTab]);
 
   const renderRangeTabs = () => {
     return [
