@@ -1,4 +1,10 @@
-import React, { useState, useEffect, use, useLayoutEffect } from "react";
+import React, {
+  useState,
+  useEffect,
+  use,
+  useLayoutEffect,
+  useTransition,
+} from "react";
 import { TimeRangeTab, TimeRangeTabMap } from "./models/DashboardModel";
 import DashboardModel, { TransactionsTabRange } from "./models/DashboardModel";
 import { useFetchTransactions } from "./hooks/fetchTransaction";
@@ -6,6 +12,7 @@ import LoadingPage from "./views/loadingPage";
 import { useAppSelector, useAppDispatch } from "./redux/hooks";
 import { AppDispatch } from "./redux/store";
 import { ageGroupActions } from "./redux/slices/ageGroupSlice";
+import { LogoIcon } from "./components/icons";
 
 // Lazy load components that should only load after loading is complete
 const SankeyDiagram = React.lazy(() => import("./components/sankyDiagram"));
@@ -31,6 +38,7 @@ function EnhancedResponsiveApp() {
   const [selectedDaysTab, setSelectedDaysTab] = useState(
     TimeRangeTab.Last7Days
   );
+  // const [isPending, startTransition] = useTransition();
 
   const [windowWidth, setWindowWidth] = useState(window.innerWidth);
   const [breakpointIndicator, setBreakpointIndicator] = useState("");
@@ -71,37 +79,14 @@ function EnhancedResponsiveApp() {
   }, [transactions, selectedDaysTab]);
 
   useEffect(() => {
-    dispatch(
-      ageGroupActions.setLoading(true)
-    );
     const t = memoizedTransactions;
     setTransactionByTabRange(t);
-    dispatch(
-      ageGroupActions.setLoading(false)
-    );
+    setTimeout(() => {
+      requestAnimationFrame(() => {
+        dispatch(ageGroupActions.updateGraph());
+      });
+    }, 50);
   }, [memoizedTransactions]);
-
-  // useLayoutEffect(() => {}, []);
-
-  // const memoizedTransactions = React.useMemo(() => {
-  //   if (isLoading) {
-  //     return transactions;
-  //   }
-  //   // Only do the data transformation here, not dispatch
-  //   return [];
-  // }, [transactions, selectedDaysTab]);
-
-  // // Move the dispatch to its own useEffect
-  // useEffect(() => {
-  //   if (!isLoading && transactions.length > 0) {
-  //     DashboardModel.processTransactions(transactions, selectedDaysTab);
-  //     // dispatch(
-  //     //   ageGroupActions.initProcess({
-  //     //     processData: { transactions, timeRange: selectedDaysTab },
-  //     //   })
-  //     // );
-  //   }
-  // }, [dispatch, isLoading, transactions.length, selectedDaysTab]);
 
   const renderRangeTabs = () => {
     return [
@@ -111,12 +96,41 @@ function EnhancedResponsiveApp() {
     ].map((tab) => (
       <button
         key={tab}
-        className={`px-4 py-1 h-[2.5rem] cursor-pointer  rounded-full ${
-          selectedDaysTab === tab ? "bg-blue-600 text-white" : "text-gray-500"
-        }`}
-        onClick={() => setSelectedDaysTab(tab)}
+        className={`
+        px-4 py-2 h-[2.rem] w-[8.5rem] 
+        cursor-pointer 
+        rounded-full 
+        relative 
+        overflow-hidden
+        transition-all duration-300 ease-in-out
+        ${
+          selectedDaysTab === tab
+            ? "text-[#004385] font-bold"
+            : "text-gray-500 font-medium hover:bg-gray-100/50"
+        }
+      `}
+        onClick={() => {
+          requestAnimationFrame(() => {
+            setSelectedDaysTab(tab);
+          });
+        }}
       >
-        {TimeRangeTabMap[tab]}
+        {/* Background element that animates */}
+        <span
+          className={`
+          absolute inset-0 
+          bg-[#E6F0F9] 
+          rounded-full 
+          transition-transform duration-300 ease-in-out
+          ${selectedDaysTab === tab ? "scale-100" : "scale-0"}
+        `}
+          aria-hidden="true"
+        ></span>
+
+        {/* Text content */}
+        <span className="relative z-10 transition-all duration-100">
+          {TimeRangeTabMap[tab]}
+        </span>
       </button>
     ));
   };
@@ -129,30 +143,12 @@ function EnhancedResponsiveApp() {
     return (
       <React.Fragment>
         {/* Header area */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6 border border-blue-300 p-2 rounded bg-blue-50">
-          <div className="flex items-center mb-4 sm:mb-0">
-            <div className="h-8 w-8 bg-blue-500 rounded-full flex items-center justify-center text-white font-bold">
-              W
-            </div>
-            <span className="ml-2 text-xl font-semibold">WalPulse</span>
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-2  pt-6  p-2 rounded">
+          <div className="flex items-center">
+            <LogoIcon size={148} />
           </div>
 
-          {/* Mobile tabs selector - only visible on very small screens */}
-          <div className="sm:hidden">
-            <select
-              className="block w-full rounded-md border-gray-300 py-2 pl-3 pr-10 text-base focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-              value={activeTab}
-              onChange={(e) => setActiveTab(e.target.value)}
-            >
-              {tabs.map((tab) => (
-                <option key={tab} value={tab}>
-                  {tab}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div className="w-auto sm:w-[26.75rem] h-[3.5rem] items-center flex justify-center bg-white rounded-full">
+          <div className="w-auto hidden sm:w-[26.75rem] h-[3.5rem] items-center sm:flex justify-center bg-white rounded-full">
             {renderRangeTabs()}
           </div>
 
@@ -180,30 +176,30 @@ function EnhancedResponsiveApp() {
 
         {/* Render components only when not loading, using React.Suspense */}
         <React.Suspense fallback={<div>Loading components...</div>}>
-          {/* Metrics row - stack on mobile, row on tablet+ */}
           <MetricCards />
         </React.Suspense>
 
         {/* Visualization grid - changes layout based on screen size */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* UTM to Demographics flow - full width on mobile/tablet, half width on desktop */}
-          <div className="min-h-[30rem] bg-white border-2 border-orange-200 rounded-lg relative">
+          <div className="min-h-[30rem] bg-white  rounded-lg relative">
             <React.Suspense fallback={<div>Loading components...</div>}>
-              <SankeyDiagram
+              {/* <SankeyDiagram
                 nodes={transactionsByTabRange?.utmAgeDemographics?.nodes || []}
                 links={transactionsByTabRange?.utmAgeDemographics?.links || []}
-              />
+              /> */}
+              <SankeyDiagram />
             </React.Suspense>
           </div>
 
           {/* Right column charts - stacked on mobile, side by side in column on large screens */}
-          <div className="flex flex-col h-[48rem] space-y-6 border-2 border-purple-200 rounded-lg bg-purple-50 relative">
+          <div className="flex flex-col h-[48rem] space-y-6  rounded-lg bg-purple-50 relative">
             {/* UTM Source Revenue Attribution */}
             <div className="flex-1 md:h-full bg-white border border-gray-200 rounded-lg p-4">
               <div className="h-7 text-gray-500 mb-2">
                 UTM Source / Revenue Attribution
               </div>
-              <div className="w-full h-6/7 border border-dashed border-gray-300 rounded flex items-center justify-center text-gray-400">
+              <div className="w-full h-6/7  flex items-center justify-center text-gray-400">
                 <React.Suspense fallback={<div>Loading components...</div>}>
                   <CustomPieChart
                     data={
@@ -218,7 +214,7 @@ function EnhancedResponsiveApp() {
             {/* Revenue Trend */}
             <div className="flex-1 md:h-full bg-white border border-gray-200 rounded-lg p-4">
               <div className="text-gray-500 mb-2">Revenue Trend</div>
-              <div className="w-full h-6/7 border border-dashed border-gray-300 rounded flex items-center justify-center text-gray-400">
+              <div className="w-full h-6/7  rounded flex items-center justify-center text-gray-400">
                 <React.Suspense fallback={<div>Loading components...</div>}>
                   <DailyRevenueTrend
                     data={
@@ -384,7 +380,7 @@ function EnhancedResponsiveApp() {
   // };
 
   return (
-    <div className="min-h-screen bg-gray-50 pb-16 md:pb-0">
+    <div className="min-h-screen bg-gray-100 pb-16 md:pb-0">
       {/* Floating breakpoint indicator */}
       {/* <div className="fixed top-0 left-0 right-0 bg-blue-600 text-white text-center text-sm py-1 z-50">
       Current width: {windowWidth}px | Breakpoint: {breakpointIndicator}

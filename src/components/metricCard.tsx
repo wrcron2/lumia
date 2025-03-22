@@ -37,23 +37,27 @@ export const MetricCards: React.FC<MetricCardsProps> = () => {
     return (
       <div
         key={title}
-        className="h-32 bg-white border-2 border-green-200 rounded-lg p-4 relative"
+        className="h-32 bg-white  rounded-2xl p-4 relative shadow-xs flex flex-col gap-1 justify-center"
       >
-        <div className="text-gray-500 mb-2">{title}</div>
-        <div className="text-2xl font-bold">
-          {formatNumberWithAffixes(value, "$", "")}
+        <div className="text-[#687D9C] font-medium font-inter text-[0.9rem]">
+          {title}
         </div>
-        {change && (
-          <div className="text-green-500 text-sm">
-            ↑ {formatNumberWithAffixes(change, "", "%")}
+        <div className="flex items-center gap-3">
+          <div className="font-medium font-inter text-[1.563rem]">
+            {formatNumberWithAffixes(value, "$", "")}
           </div>
-        )}
+          {change !== null && (
+            <div className="text-[#379F72] bg-[#EBF5F0] h-[31px] rounded-2xl text-sm px-2 flex items-center">
+              ↑{formatNumberWithAffixes(change, "", "%")}
+            </div>
+          )}
+        </div>
       </div>
     );
   };
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-3">
       {metricsData.map((item) =>
         renderMetricCard(item.title, item.value, item?.change)
       )}

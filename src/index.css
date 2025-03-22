@@ -1,6 +1,8 @@
 @layer theme, base, components, utilities;
-
 @import "tailwindcss";
 @import "tailwindcss/preflight.css" layer(base);
 @import "tailwindcss/utilities.css" layer(utilities);
 
+@theme {
+    --font-inter: "Inter", inter; 
+  }
