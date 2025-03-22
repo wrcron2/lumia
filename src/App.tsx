@@ -111,7 +111,6 @@
 
 // export default ResponsiveApp;
 
-import React from "react";
 import EnhancedResponsiveApp from "./EnhancedResponsiveApp";
 function App() {
   return <EnhancedResponsiveApp />;

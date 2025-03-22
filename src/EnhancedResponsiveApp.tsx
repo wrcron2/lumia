@@ -5,8 +5,10 @@ import CustomPieChart from "./components/revenueAttributionGraph";
 import DashboardModel, { TransactionsTabRange } from "./models/DashboardModel";
 import { useFetchTransactions } from "./hooks/fetchTransaction";
 import { MetricCards } from "./components/metricCard";
-import AreaChartChart from "./components/revenueTrendChart";
 import DailyRevenueTrend from "./components/revenueTrendChart";
+import LoadingPage from "./views/loadingPage";
+
+
 
 // Tabs for mobile view
 const tabs = ["Dashboard", "Analytics", "Settings"];
@@ -79,15 +81,13 @@ function EnhancedResponsiveApp() {
     ));
   };
 
-  return (
-    <div className="min-h-screen bg-gray-50 pb-16 md:pb-0">
-      {/* Floating breakpoint indicator */}
-      <div className="fixed top-0 left-0 right-0 bg-blue-600 text-white text-center text-sm py-1 z-50">
-        Current width: {windowWidth}px | Breakpoint: {breakpointIndicator}
-      </div>
+  const renderLoading = () => {
+    return <LoadingPage />;
+  };
 
-      {/* Dashboard container with responsive padding */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+  const renderMainContent = () => {
+    return (
+      <React.Fragment>
         {/* Header area */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6 border border-blue-300 p-2 rounded bg-blue-50">
           <div className="flex items-center mb-4 sm:mb-0">
@@ -145,16 +145,16 @@ function EnhancedResponsiveApp() {
           {/* UTM to Demographics flow - full width on mobile/tablet, half width on desktop */}
           <div className="min-h-[30rem] bg-white border-2 border-orange-200 rounded-lg relative">
             {/* <div className="absolute top-0 right-0 bg-orange-100 text-xs px-2 py-1 rounded-bl-lg">
-              col-span-1/1 on mobile, col-span-1/2 on lg+
-            </div>
-            <div className="text-gray-500 mb-2">UTM Source / Age Group</div>
-            <div className="w-full h-5/6 border border-dashed border-gray-300 rounded flex items-center justify-center text-gray-400 flex-col">
-              <span className="text-xl mb-2">Flow Chart Placeholder</span>
-              <span className="text-sm text-center px-4">
-                Full width on mobile and tablet, half width on desktop (lg+)
-              </span>
-             
-            </div> */}
+                col-span-1/1 on mobile, col-span-1/2 on lg+
+              </div>
+              <div className="text-gray-500 mb-2">UTM Source / Age Group</div>
+              <div className="w-full h-5/6 border border-dashed border-gray-300 rounded flex items-center justify-center text-gray-400 flex-col">
+                <span className="text-xl mb-2">Flow Chart Placeholder</span>
+                <span className="text-sm text-center px-4">
+                  Full width on mobile and tablet, half width on desktop (lg+)
+                </span>
+               
+              </div> */}
             <SankeyDiagram
               nodes={transactionsByTabRange?.utmAgeDemographics.nodes || []}
               links={transactionsByTabRange?.utmAgeDemographics.links || []}
@@ -182,7 +182,10 @@ function EnhancedResponsiveApp() {
             <div className="flex-1 md:h-full bg-white border border-gray-200 rounded-lg p-4">
               <div className="text-gray-500 mb-2">Revenue Trend</div>
               <div className="w-full h-6/7 border border-dashed border-gray-300 rounded flex items-center justify-center text-gray-400">
-                <DailyRevenueTrend data={DashboardModel.transactionsTabRange.revenueTrendData} timeRange={selectedDaysTab} />
+                <DailyRevenueTrend
+                  data={DashboardModel.transactionsTabRange.revenueTrendData}
+                  timeRange={selectedDaysTab}
+                />
               </div>
             </div>
           </div>
@@ -206,6 +209,20 @@ function EnhancedResponsiveApp() {
             ))}
           </div>
         </div>
+      </React.Fragment>
+    );
+  };
+
+  return (
+    <div className="min-h-screen bg-gray-50 pb-16 md:pb-0">
+      {/* Floating breakpoint indicator */}
+      {/* <div className="fixed top-0 left-0 right-0 bg-blue-600 text-white text-center text-sm py-1 z-50">
+      Current width: {windowWidth}px | Breakpoint: {breakpointIndicator}
+    </div> */}
+
+      {/* Dashboard container with responsive padding */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        {isLoading || true ? renderLoading() : renderMainContent()}
       </div>
     </div>
   );
