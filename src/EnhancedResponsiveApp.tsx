@@ -13,6 +13,7 @@ import { useAppSelector, useAppDispatch } from "./redux/hooks";
 import { AppDispatch } from "./redux/store";
 import { ageGroupActions } from "./redux/slices/ageGroupSlice";
 import { LogoIcon } from "./components/icons";
+import FilterPanel from "./components/Filters";
 
 // Lazy load components that should only load after loading is complete
 const SankeyDiagram = React.lazy(() => import("./components/sankyDiagram"));
@@ -83,7 +84,7 @@ function EnhancedResponsiveApp() {
 
   useEffect(() => {
     const t = memoizedTransactions;
-    setTransactionByTabRange(t);
+    // setTransactionByTabRange(t);
     setTimeout(() => {
       requestAnimationFrame(() => {
         dispatch(ageGroupActions.updateGraph());
@@ -155,20 +156,7 @@ function EnhancedResponsiveApp() {
           <div className="hidden sm:flex items-center">
             {/* Filter button */}
             <div className="ml-2 h-10 w-10 bg-white border border-gray-200 rounded-full flex items-center justify-center">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                className="h-5 w-5 text-gray-500"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"
-                />
-              </svg>
+              <FilterPanel />
             </div>
           </div>
         </div>
@@ -183,10 +171,6 @@ function EnhancedResponsiveApp() {
           {/* UTM to Demographics flow - full width on mobile/tablet, half width on desktop */}
           <div className="min-h-[30rem] bg-white  rounded-lg relative">
             <React.Suspense fallback={<div>Loading components...</div>}>
-              {/* <SankeyDiagram
-                nodes={transactionsByTabRange?.utmAgeDemographics?.nodes || []}
-                links={transactionsByTabRange?.utmAgeDemographics?.links || []}
-              /> */}
               <SankeyDiagram />
             </React.Suspense>
           </div>
@@ -254,12 +238,6 @@ function EnhancedResponsiveApp() {
 
   return (
     <div className="min-h-screen bg-gray-100 pb-16 md:pb-0">
-      {/* Floating breakpoint indicator */}
-      {/* <div className="fixed top-0 left-0 right-0 bg-blue-600 text-white text-center text-sm py-1 z-50">
-      Current width: {windowWidth}px | Breakpoint: {breakpointIndicator}
-    </div> */}
-
-      {/* Dashboard container with responsive padding */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         {isLoading ? renderLoading() : renderMainContent()}
       </div>
