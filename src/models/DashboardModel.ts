@@ -140,7 +140,7 @@ class DashboardModel {
   };
 
   getDateRange = (
-    range: string,
+    range: number,
     currentTime = Date.now()
   ): { start: number; end: number; prevStart: number; prevEnd: number } => {
     const DAY_MS = 24 * 60 * 60 * 1000;
@@ -151,20 +151,19 @@ class DashboardModel {
     let prevStart: number;
 
     switch (range) {
-      case "7d": {
+      case 1: {
         start = end - 7 * DAY_MS;
         prevEnd = start - 1;
         prevStart = prevEnd - 7 * DAY_MS;
         break;
       }
-      case "30d": {
+      case 2: {
         start = end - 30 * DAY_MS;
         prevEnd = start - 1;
         prevStart = prevEnd - 30 * DAY_MS;
         break;
       }
-      case "all":
-
+      case 3:
       default: {
         start = 0;
         prevStart = 0;
@@ -184,13 +183,19 @@ class DashboardModel {
     transactions: EnrichedTransaction[],
     utm_sources: string[]
   ): DataAttribution[] => {
+
+    const totalRevenue = transactions.reduce(
+      (sum, transaction) => sum + transaction.revenue_usd,
+      0
+    );
     const sourceGroup = transactions.reduce((acc, transaction) => {
       if (!acc[transaction.utm_source]) {
         acc[transaction.utm_source] = 0;
       }
       return {
         ...acc,
-        [transaction.utm_source]: acc[transaction.utm_source] + 1,
+        [transaction.utm_source]:
+          acc[transaction.utm_source] + transaction.revenue_usd,
       };
     }, {} as Record<string, number>);
     const revenueByUtmSource = utm_sources.map((utm_source: string) => {
@@ -199,9 +204,10 @@ class DashboardModel {
       }
       return {
         name: utm_source,
-        value: Math.round(
-          ((sourceGroup[utm_source] || 0) / transactions.length) * 100
-        ),
+        value:
+          totalRevenue > 0
+            ? Math.round(((sourceGroup[utm_source] || 0) / totalRevenue) * 100)
+            : 0,
         color: utmColors[utm_source].nodeColor,
         label: utm_source.charAt(0).toUpperCase() + utm_source.slice(1),
       };
@@ -315,7 +321,7 @@ class DashboardModel {
       links,
     };
   }
-  processTransactions = (transactions: Transaction[], dateRang: string) => {
+  processTransactions = (transactions: Transaction[], dateRang: number) => {
     const utm_sources = [
       ...new Set(transactions.map((transactions) => transactions.utm_source)),
     ];

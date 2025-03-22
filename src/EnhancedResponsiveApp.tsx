@@ -13,7 +13,7 @@ const tabs = ["Dashboard", "Analytics", "Settings"];
 
 function EnhancedResponsiveApp() {
   const [activeTab, setActiveTab] = useState("Dashboard");
-  const [selectedTimeTab, setSelectedTimeTab] = useState(
+  const [selectedDaysTab, setSelectedDaysTab] = useState(
     TimeRangeTab.Last7Days
   );
   const [windowWidth, setWindowWidth] = useState(window.innerWidth);
@@ -53,8 +53,8 @@ function EnhancedResponsiveApp() {
   useEffect(() => {}, []);
 
   const memoizedTransactions = React.useMemo(() => {
-    return DashboardModel.processTransactions(transactions, "7d");
-  }, [transactions]);
+    return DashboardModel.processTransactions(transactions, selectedDaysTab);
+  }, [transactions, selectedDaysTab]);
 
   useEffect(() => {
     const t = memoizedTransactions;
@@ -70,9 +70,9 @@ function EnhancedResponsiveApp() {
       <button
         key={tab}
         className={`px-4 py-1 h-[2.5rem] cursor-pointer  rounded-full ${
-          selectedTimeTab === tab ? "bg-blue-600 text-white" : "text-gray-500"
+          selectedDaysTab === tab ? "bg-blue-600 text-white" : "text-gray-500"
         }`}
-        onClick={() => setSelectedTimeTab(tab)}
+        onClick={() => setSelectedDaysTab(tab)}
       >
         {TimeRangeTabMap[tab]}
       </button>
@@ -182,7 +182,7 @@ function EnhancedResponsiveApp() {
             <div className="flex-1 md:h-full bg-white border border-gray-200 rounded-lg p-4">
               <div className="text-gray-500 mb-2">Revenue Trend</div>
               <div className="w-full h-6/7 border border-dashed border-gray-300 rounded flex items-center justify-center text-gray-400">
-                <DailyRevenueTrend data={DashboardModel.transactionsTabRange.revenueTrendData} />
+                <DailyRevenueTrend data={DashboardModel.transactionsTabRange.revenueTrendData} timeRange={selectedDaysTab} />
               </div>
             </div>
           </div>
