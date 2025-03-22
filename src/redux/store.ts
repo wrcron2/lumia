@@ -1,11 +1,11 @@
 import { configureStore } from '@reduxjs/toolkit'
 // ...
-
+import ageGroupReducer from './slices/ageGroupSlice'
 export const store = configureStore({
   reducer: {
-    // posts: postsReducer,
-    // comments: commentsReducer,
-    // users: usersReducer
+    ageGroup: ageGroupReducer,
+    // attribution: attributionReducer,
+    // revTrend: revTrendReducer,
   }
 })
 
@@ -14,3 +14,5 @@ export type RootState = ReturnType<typeof store.getState>
 // Inferred type: {posts: PostsState, comments: CommentsState, users: UsersState}
 export type AppDispatch = typeof store.dispatch
 export type AppStore = typeof store
+
+

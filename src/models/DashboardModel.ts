@@ -375,9 +375,9 @@ class DashboardModel {
       0
     );
     const prevTransactions = previousTransactions.length;
-    const prevUniqueCustomers = new Set(
-      previousTransactions.map((t) => t.customer_id)
-    ).size;
+    // const prevUniqueCustomers = new Set(
+    //   previousTransactions.map((t) => t.customer_id)
+    // ).size;
 
     //calculate percentage change
     const revenueChange =
