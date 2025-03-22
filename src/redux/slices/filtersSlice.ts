@@ -15,7 +15,6 @@ const filtersSlice = createSlice({
   initialState,
   reducers: {
     updateSearchTerm: (state, action) => {
-      state.filters.searchTerm = action.payload;
     },
   },
 });

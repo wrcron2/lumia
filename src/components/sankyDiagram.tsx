@@ -1,7 +1,6 @@
-import React, { useDeferredValue, useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { ResponsiveContainer } from "recharts";
 import DashboardModel, {
-  UtmAgeDemographicData,
   UtmAgeDemographicLink,
   UtmAgeDemographicNode,
 } from "../models/DashboardModel";

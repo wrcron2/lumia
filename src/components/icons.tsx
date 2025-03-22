@@ -1,4 +1,3 @@
-import React from 'react';
 
 import LogoSvg  from '../assets/icons/logo.svg';
 

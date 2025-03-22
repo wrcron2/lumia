@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { ChevronDown, X, Filter, Check, RefreshCw } from "lucide-react";
+import { X, Check, RefreshCw } from "lucide-react";
 
 const FilterPanel = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -148,20 +148,6 @@ const FilterPanel = () => {
     </div>
   );
 
-  const CountBadge = ({ count }: { count: number }) => {
-    if (count === 0) return null;
-    return (
-      <span className="ml-2 px-2 py-0.5 text-xs bg-blue-100 text-blue-600 rounded-full">
-        {count}
-      </span>
-    );
-  };
-
-  const totalFiltersCount =
-    selectedFilters.utmSource.length +
-    selectedFilters.ageGroup.length +
-    selectedFilters.revenueRange.length +
-    selectedFilters.gender.length;
 
   return (
     <React.Fragment>

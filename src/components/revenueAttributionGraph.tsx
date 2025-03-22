@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { PieChart, Pie, Cell, ResponsiveContainer, Sector } from "recharts";
-import DashboardModel, { DataAttribution } from "../models/DashboardModel";
+import { DataAttribution } from "../models/DashboardModel";
 
 interface DataItem {
   name: string;

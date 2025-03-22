@@ -1,15 +1,12 @@
 import React, {
   useState,
   useEffect,
-  use,
-  useLayoutEffect,
-  useTransition,
 } from "react";
 import { TimeRangeTab, TimeRangeTabMap } from "./models/DashboardModel";
 import DashboardModel, { TransactionsTabRange } from "./models/DashboardModel";
 import { useFetchTransactions } from "./hooks/fetchTransaction";
 import LoadingPage from "./views/loadingPage";
-import { useAppSelector, useAppDispatch } from "./redux/hooks";
+import { useAppDispatch } from "./redux/hooks";
 import { AppDispatch } from "./redux/store";
 import { ageGroupActions } from "./redux/slices/ageGroupSlice";
 import { LogoIcon } from "./components/icons";
@@ -38,45 +35,14 @@ const TABS_DAYS_RANGE = [
 function EnhancedResponsiveApp() {
   const dispatch = useAppDispatch<AppDispatch>();
 
-  const [activeTab, setActiveTab] = useState("Dashboard");
   const [selectedDaysTab, setSelectedDaysTab] = useState(
     TimeRangeTab.Last7Days
   );
   // const [isPending, startTransition] = useTransition();
 
-  const [windowWidth, setWindowWidth] = useState(window.innerWidth);
-  const [breakpointIndicator, setBreakpointIndicator] = useState("");
-  const { transactions, isLoading, error, reFetch } = useFetchTransactions();
-  const [transactionsByTabRange, setTransactionByTabRange] =
-    useState<TransactionsTabRange>();
-  // Update window width state on resize
-  useEffect(() => {
-    const handleResize = () => {
-      setWindowWidth(window.innerWidth);
+  const { transactions, isLoading } = useFetchTransactions();
 
-      // Update breakpoint indicator
-      if (window.innerWidth < 640) {
-        setBreakpointIndicator("xs (< 640px)");
-      } else if (window.innerWidth < 768) {
-        setBreakpointIndicator("sm (640px - 767px)");
-      } else if (window.innerWidth < 1024) {
-        setBreakpointIndicator("md (768px - 1023px)");
-      } else if (window.innerWidth < 1280) {
-        setBreakpointIndicator("lg (1024px - 1279px)");
-      } else {
-        setBreakpointIndicator("xl (≥ 1280px)");
-      }
-    };
 
-    // Initial call
-    handleResize();
-
-    // Set up event listener
-    window.addEventListener("resize", handleResize);
-
-    // Clean up
-    return () => window.removeEventListener("resize", handleResize);
-  }, []);
 
   const memoizedTransactions = React.useMemo(() => {
     return DashboardModel.processTransactions(transactions, selectedDaysTab);

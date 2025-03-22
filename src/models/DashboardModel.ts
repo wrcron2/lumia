@@ -1,4 +1,3 @@
-import transactionsService from "../services/transactionsService";
 
 type UtmSourceType =
   | "google"
@@ -86,14 +85,6 @@ export const utmColors: Record<
   linkedin: { nodeColor: "#0A66C2", linkColor: "rgba(10, 102, 194, 0.4)" }, // Blue
 };
 
-const ageGroupsColors: Record<string, string> = {
-  "Under 15": "#D3D3D3",
-  "15-19": "#B0BEC5",
-  "20-29": "#90A4AE",
-  "30-39": "#78909C",
-  "40-49": "#607D8B",
-  "50+": "#455A64",
-};
 
 export interface TransactionsTabRange {
   totalRevenue: number;
