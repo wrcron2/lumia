@@ -1,5 +1,8 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
-import { TransactionFilters } from "../../models/DashboardModel";
+import {
+  TransactionFilters,
+  RevenueRangeFilter,
+} from "../../models/DashboardModel";
 
 const initialState: TransactionFilters = {
   utms: [],
@@ -21,7 +24,7 @@ const filtersSlice = createSlice({
     setAgeGroupFilter: (state, action: PayloadAction<string[]>) => {
       state.ageGroups = action.payload;
     },
-    setRevenueFilter: (state, action: PayloadAction<number[]>) => {
+    setRevenueFilter: (state, action: PayloadAction<RevenueRangeFilter[]>) => {
       state.revenue = action.payload;
     },
   },

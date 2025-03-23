@@ -1,21 +1,27 @@
-import React, { useEffect, useState } from "react";
-import { X, Check, RefreshCw } from "lucide-react";
+import React, { useState, useEffect } from "react";
+import { X, Filter, Check, RefreshCw } from "lucide-react";
 import { useDispatch, useSelector } from "react-redux";
-import { RootState } from "../redux/store";
 import { filtersActions } from "../redux/slices/filtersSlice";
+import { RootState } from "../redux/store";
+
+// Define the RevenueRangeFilter type outside components for reuse
+type RevenueRangeFilter = { min: number; max: number | null };
 
 const FilterPanel = () => {
   const dispatch = useDispatch();
+  const [isOpen, setIsOpen] = useState(false);
+
+  // Get current filter state from Redux using individual selectors to prevent unnecessary re-renders
   const utms = useSelector((state: RootState) => state.filters.utms);
   const gender = useSelector((state: RootState) => state.filters.gender);
   const ageGroups = useSelector((state: RootState) => state.filters.ageGroups);
   const revenue = useSelector((state: RootState) => state.filters.revenue);
 
-  const [isOpen, setIsOpen] = useState(false);
+  // Local state for UI management - initialized only once
   const [selectedFilters, setSelectedFilters] = useState<{
     utmSource: string[];
     ageGroup: string[];
-    revenueRange: string[];
+    revenueRange: RevenueRangeFilter[];
     gender: string[];
     dateRange: string;
   }>({
@@ -25,6 +31,40 @@ const FilterPanel = () => {
     gender: [],
     dateRange: "last7",
   });
+
+  // Update local state when Redux state changes, with dependencies properly listed
+  useEffect(() => {
+    setSelectedFilters((prev) => ({
+      ...prev,
+      utmSource: utms || [],
+      gender: gender || [],
+    }));
+  }, [utms, gender]);
+
+  useEffect(() => {
+    setSelectedFilters((prev) => ({
+      ...prev,
+      ageGroup: ageGroups || [],
+      revenueRange: Array.isArray(revenue) ? revenue : [],
+    }));
+  }, [ageGroups, revenue]);
+
+  // Helper function to parse revenue range strings into RevenueRangeFilter objects
+  const parseRevenueRanges = (rangeStrings: string[]): RevenueRangeFilter[] => {
+    return rangeStrings.map((range) => {
+      // Handle the special case for "$5000+"
+      if (range.includes("+")) {
+        return { min: 5000, max: null };
+      }
+
+      // Normal range like "$0-$100"
+      const parts = range.split("-");
+      return {
+        min: parseFloat(parts[0].replace(/[^\d.]/g, "")),
+        max: parseFloat(parts[1].replace(/[^\d.]/g, "")),
+      };
+    });
+  };
 
   const utmOptions = [
     "Instagram",
@@ -56,22 +96,26 @@ const FilterPanel = () => {
   ];
 
   const toggleFilter = (
-    category: Exclude<keyof typeof selectedFilters, "dateRange">,
+    category: keyof typeof selectedFilters,
     value: string
   ) => {
     setSelectedFilters((prev) => {
       const newFilters = { ...prev };
-      if (Array.isArray(newFilters[category])) {
-        if (newFilters[category].includes(value)) {
-          newFilters[category] = newFilters[category].filter(
+      if (newFilters[category].includes(value as any)) {
+        if (Array.isArray(newFilters[category])) {
+          //@ts-ignore
+          newFilters[category] = (newFilters[category] as string[]).filter(
             (item) => item !== value
           );
-        } else {
-          newFilters[category] = [...newFilters[category], value];
         }
+      } else {
+        //@ts-ignore
+        newFilters[category] = [...newFilters[category], value as any];
       }
       return newFilters;
     });
+
+    // Map component categories to Redux action dispatchers
     switch (category) {
       case "utmSource":
         // Toggle in redux state
@@ -93,12 +137,16 @@ const FilterPanel = () => {
         dispatch(filtersActions.setAgeGroupFilter(newAgeGroups));
         break;
       case "revenueRange":
-        const newRevenue = selectedFilters.revenueRange.includes(value)
-          ? selectedFilters.revenueRange.filter((item) => item !== value)
-          : [...selectedFilters.revenueRange, value];
-        // Note: Your slice expects numbers, but your UI shows strings like "$0-$100"
-        // You may need to convert these values or update your slice to accept strings
-        dispatch(filtersActions.setRevenueFilter(newRevenue.map((range) => parseFloat(range.replace(/[^0-9]/g, '')))));
+        const newRevenueRanges = selectedFilters.revenueRange.some(
+          (item) => item.min === parseRevenueRanges([value])[0].min
+        )
+          ? selectedFilters.revenueRange.filter(
+              (item) => item.min !== parseRevenueRanges([value])[0].min
+            )
+          : [...selectedFilters.revenueRange, parseRevenueRanges([value])[0]];
+
+        // Parse revenue ranges and dispatch to Redux
+        dispatch(filtersActions.setRevenueFilter(newRevenueRanges));
         break;
       default:
         break;
@@ -110,6 +158,7 @@ const FilterPanel = () => {
   };
 
   const clearAllFilters = () => {
+    // Clear local state
     setSelectedFilters({
       utmSource: [],
       ageGroup: [],
@@ -117,33 +166,34 @@ const FilterPanel = () => {
       gender: [],
       dateRange: "last7",
     });
+
+    // Clear Redux state
     dispatch(filtersActions.setUtmmFilter([]));
     dispatch(filtersActions.setGenderFilter([]));
     dispatch(filtersActions.setAgeGroupFilter([]));
-    dispatch(filtersActions.setRevenueFilter([]));
-    setSelectedFilters((prev) => ({ ...prev, dateRange: "last7" }));
+    dispatch(filtersActions.setRevenueFilter([])); // Empty array for RevenueRangeFilter[]
   };
 
-  useEffect(() => {
-    setSelectedFilters((prev) => ({
-      ...prev,
-      utmSource: utms || [],
-      gender: gender || [],
-    }));
-  }, [utms, gender]);
-
-  useEffect(() => {
-    setSelectedFilters((prev) => ({
-      ...prev,
-      ageGroup: ageGroups || [],
-      revenueRange: (revenue || []).map(String),
-    }));
-  }, [ageGroups, revenue]);
-
   const applyFilters = () => {
-    console.log("Applying filters:", selectedFilters);
+    // Dispatch all filter states to Redux
+    dispatch(filtersActions.setUtmmFilter(selectedFilters.utmSource));
+    dispatch(filtersActions.setGenderFilter(selectedFilters.gender));
+    dispatch(filtersActions.setAgeGroupFilter(selectedFilters.ageGroup));
+
+    // Process revenue ranges and dispatch to Redux
+    dispatch(
+      filtersActions.setRevenueFilter(
+        parseRevenueRanges(
+          selectedFilters.revenueRange.map((range) =>
+            range.max === null
+              ? `$${range.min}+`
+              : `$${range.min}-$${range.max}`
+          )
+        )
+      )
+    );
+
     setIsOpen(false);
-    // Here you would typically pass these filters to a parent component or state management solution
   };
 
   const FilterSection = ({
@@ -162,24 +212,33 @@ const FilterPanel = () => {
           <div
             key={option}
             className={`flex items-center px-3 py-2 rounded-md text-sm cursor-pointer border ${
-              selectedFilters[category].includes(option)
+              Array.isArray(selectedFilters[category]) &&
+              selectedFilters[category].some((item) =>
+                typeof item === "string"
+                  ? item === option
+                  : item.min === parseRevenueRanges([option])[0].min
+              )
                 ? "bg-blue-50 border-blue-200 text-blue-600"
                 : "bg-white border-gray-200 text-gray-600 hover:bg-gray-50"
             }`}
-            onClick={() => {
-              if (category !== "dateRange") toggleFilter(category, option);
-            }}
+            onClick={() => toggleFilter(category, option)}
           >
             <div
               className={`w-4 h-4 mr-2 flex items-center justify-center rounded-sm border ${
-                selectedFilters[category].includes(option)
+                Array.isArray(selectedFilters[category]) &&
+                selectedFilters[category].some((item) =>
+                  typeof item === "string"
+                    ? item === option
+                    : item.min === parseRevenueRanges([option])[0].min
+                )
                   ? "bg-blue-500 border-blue-500"
                   : "border-gray-300"
               }`}
             >
-              {selectedFilters[category].includes(option) && (
-                <Check size={12} color="white" />
-              )}
+              {Array.isArray(selectedFilters[category]) &&
+                selectedFilters[category].some((item) =>
+                  typeof item === "string" ? item === option : false
+                ) && <Check size={12} color="white" />}
             </div>
             {option}
           </div>
@@ -209,6 +268,21 @@ const FilterPanel = () => {
     </div>
   );
 
+  const CountBadge = ({ count }: { count: number }) => {
+    if (count === 0) return null;
+    return (
+      <span className="ml-2 px-2 py-0.5 text-xs bg-blue-100 text-blue-600 rounded-full">
+        {count}
+      </span>
+    );
+  };
+
+  const totalFiltersCount =
+    selectedFilters.utmSource.length +
+    selectedFilters.ageGroup.length +
+    selectedFilters.revenueRange.length +
+    selectedFilters.gender.length;
+
   return (
     <React.Fragment>
       <div className="z-30">
@@ -230,6 +304,18 @@ const FilterPanel = () => {
         </div>
       </div>
       <div className="flex flex-col h-screen">
+        {/* Filter Button
+ <div className="fixed top-4 right-4 z-30">
+   <button
+     onClick={() => setIsOpen(!isOpen)}
+     className="flex items-center px-3 py-2 rounded-md text-sm bg-white border border-gray-200 shadow-sm hover:bg-gray-50 focus:outline-none"
+   >
+     <Filter size={16} className="mr-2" />
+     Filters
+     <CountBadge count={totalFiltersCount} />
+   </button>
+ </div> */}
+
         {/* Filter Panel */}
         <div
           className={`fixed inset-y-0 right-0 w-80 md:w-96 bg-white shadow-xl transform transition-transform duration-300 ease-in-out z-50 ${

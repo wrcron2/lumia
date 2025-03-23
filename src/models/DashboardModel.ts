@@ -102,12 +102,13 @@ export interface DataAttribution {
   color: string;
   label: string;
 }
+export type RevenueRangeFilter = { min: number; max: number | null };
 
 export type TransactionFilters = {
   utms: string[];
   gender: string[];
   ageGroups: string[];
-  revenue: number[];
+  revenue: RevenueRangeFilter[];
 };
 
 export const ageObjectColors = [
@@ -371,14 +372,19 @@ class DashboardModel {
 
       const genderMatch =
         filters.gender.length === 0 ||
-        filters.gender.map((item) => item.toLowerCase()).includes(t.customer_metadata.gender);
+        filters.gender
+          .map((item) => item.toLowerCase())
+          .includes(t.customer_metadata.gender);
 
+      // const revenueMatch =
+      //   filters.revenue.length === 0 ||
+      //   filters.revenue.some;
 
       return utmMatch && genderMatch;
     });
 
     this.transactions = transactions;
-    
+
     this.dateRange = dateRang;
     const utm_sources = this.getUTMSources(transactions);
 
