@@ -29,6 +29,24 @@ export const MetricCards: React.FC<MetricCardsProps> = () => {
       change: null,
     },
   ];
+
+  const renderMetricChange = (change: number) => {
+    const textColor = change > 0 ? "text-[#379F72]" : "text-[#FF5C5C]";
+    const backgroundColor = change > 0 ? "bg-[#EBF5F0]" : "bg-[#FDECEC]";
+    const icon = change > 0 ? "↑" : "↓";
+    if (change === 0) {
+      return null;
+    }
+    return (
+      <div
+        className={`h-[31px] rounded-2xl text-sm px-2 flex items-center ${backgroundColor} ${textColor}`}
+      >
+        {icon}
+        {formatNumberWithAffixes(change, "", "%")}
+      </div>
+    );
+  };
+
   const renderMetricCard = (
     title: string,
     value: number,
@@ -46,11 +64,7 @@ export const MetricCards: React.FC<MetricCardsProps> = () => {
           <div className="font-medium font-inter text-[1.563rem]">
             {formatNumberWithAffixes(value, "$", "")}
           </div>
-          {change !== null && (
-            <div className="text-[#379F72] bg-[#EBF5F0] h-[31px] rounded-2xl text-sm px-2 flex items-center">
-              ↑{formatNumberWithAffixes(change, "", "%")}
-            </div>
-          )}
+          {change !== null && renderMetricChange(change)}
         </div>
       </div>
     );
