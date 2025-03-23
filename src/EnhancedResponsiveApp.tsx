@@ -1,16 +1,14 @@
-import React, {
-  useState,
-  useEffect,
-} from "react";
+import React, { useState, useEffect } from "react";
 import { TimeRangeTab, TimeRangeTabMap } from "./models/DashboardModel";
 import DashboardModel, { TransactionsTabRange } from "./models/DashboardModel";
 import { useFetchTransactions } from "./hooks/fetchTransaction";
 import LoadingPage from "./views/loadingPage";
 import { useAppDispatch } from "./redux/hooks";
-import { AppDispatch } from "./redux/store";
+import { AppDispatch, RootState } from "./redux/store";
 import { ageGroupActions } from "./redux/slices/ageGroupSlice";
 import { LogoIcon } from "./components/icons";
 import FilterPanel from "./components/Filters";
+import { useSelector } from "react-redux";
 
 // Lazy load components that should only load after loading is complete
 const SankeyDiagram = React.lazy(() => import("./components/sankyDiagram"));
@@ -34,6 +32,10 @@ const TABS_DAYS_RANGE = [
 
 function EnhancedResponsiveApp() {
   const dispatch = useAppDispatch<AppDispatch>();
+  const utms = useSelector((state: RootState) => state.filters.utms);
+  const gender = useSelector((state: RootState) => state.filters.gender);
+  const ageGroups = useSelector((state: RootState) => state.filters.ageGroups);
+  const revenue = useSelector((state: RootState) => state.filters.revenue);
 
   const [selectedDaysTab, setSelectedDaysTab] = useState(
     TimeRangeTab.Last7Days
@@ -42,11 +44,15 @@ function EnhancedResponsiveApp() {
 
   const { transactions, isLoading } = useFetchTransactions();
 
-
-
   const memoizedTransactions = React.useMemo(() => {
-    return DashboardModel.processTransactions(transactions, selectedDaysTab);
-  }, [transactions, selectedDaysTab]);
+    const filters = {
+      utms,
+      gender,
+      ageGroups,
+      revenue,
+    };
+    return DashboardModel.processTransactions(transactions, selectedDaysTab, filters);
+  }, [transactions, selectedDaysTab, utms, gender, ageGroups, revenue]);
 
   useEffect(() => {
     const t = memoizedTransactions;
@@ -118,32 +124,25 @@ function EnhancedResponsiveApp() {
             {renderRangeTabs()}
           </div>
 
-          {/* Desktop filter controls - hidden on mobile */}
           <div className="hidden sm:flex items-center">
-            {/* Filter button */}
             <div className="ml-2 h-10 w-10 bg-white border border-gray-200 rounded-full flex items-center justify-center">
               <FilterPanel />
             </div>
           </div>
         </div>
 
-        {/* Render components only when not loading, using React.Suspense */}
         <React.Suspense fallback={<div>Loading components...</div>}>
           <MetricCards />
         </React.Suspense>
 
-        {/* Visualization grid - changes layout based on screen size */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* UTM to Demographics flow - full width on mobile/tablet, half width on desktop */}
           <div className="min-h-[30rem] bg-white  rounded-lg relative">
             <React.Suspense fallback={<div>Loading components...</div>}>
               <SankeyDiagram />
             </React.Suspense>
           </div>
 
-          {/* Right column charts - stacked on mobile, side by side in column on large screens */}
           <div className="flex flex-col h-[48rem] space-y-6  rounded-lg bg-purple-50 relative">
-            {/* UTM Source Revenue Attribution */}
             <div className="flex-1 md:h-full bg-white border border-gray-200 rounded-lg p-4">
               <div className="h-7 text-gray-500 mb-2">
                 UTM Source / Revenue Attribution
@@ -160,7 +159,6 @@ function EnhancedResponsiveApp() {
               </div>
             </div>
 
-            {/* Revenue Trend */}
             <div className="flex-1 md:h-full bg-white border border-gray-200 rounded-lg p-4">
               <div className="text-gray-500 mb-2">Revenue Trend</div>
               <div className="w-full h-6/7  rounded flex items-center justify-center text-gray-400">

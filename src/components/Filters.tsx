@@ -1,7 +1,16 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { X, Check, RefreshCw } from "lucide-react";
+import { useDispatch, useSelector } from "react-redux";
+import { RootState } from "../redux/store";
+import { filtersActions } from "../redux/slices/filtersSlice";
 
 const FilterPanel = () => {
+  const dispatch = useDispatch();
+  const utms = useSelector((state: RootState) => state.filters.utms);
+  const gender = useSelector((state: RootState) => state.filters.gender);
+  const ageGroups = useSelector((state: RootState) => state.filters.ageGroups);
+  const revenue = useSelector((state: RootState) => state.filters.revenue);
+
   const [isOpen, setIsOpen] = useState(false);
   const [selectedFilters, setSelectedFilters] = useState<{
     utmSource: string[];
@@ -63,6 +72,37 @@ const FilterPanel = () => {
       }
       return newFilters;
     });
+    switch (category) {
+      case "utmSource":
+        // Toggle in redux state
+        const newUtms = selectedFilters.utmSource.includes(value)
+          ? selectedFilters.utmSource.filter((item) => item !== value)
+          : [...selectedFilters.utmSource, value];
+        dispatch(filtersActions.setUtmmFilter(newUtms));
+        break;
+      case "gender":
+        const newGenders = selectedFilters.gender.includes(value)
+          ? selectedFilters.gender.filter((item) => item !== value)
+          : [...selectedFilters.gender, value];
+        dispatch(filtersActions.setGenderFilter(newGenders));
+        break;
+      case "ageGroup":
+        const newAgeGroups = selectedFilters.ageGroup.includes(value)
+          ? selectedFilters.ageGroup.filter((item) => item !== value)
+          : [...selectedFilters.ageGroup, value];
+        dispatch(filtersActions.setAgeGroupFilter(newAgeGroups));
+        break;
+      case "revenueRange":
+        const newRevenue = selectedFilters.revenueRange.includes(value)
+          ? selectedFilters.revenueRange.filter((item) => item !== value)
+          : [...selectedFilters.revenueRange, value];
+        // Note: Your slice expects numbers, but your UI shows strings like "$0-$100"
+        // You may need to convert these values or update your slice to accept strings
+        dispatch(filtersActions.setRevenueFilter(newRevenue.map((range) => parseFloat(range.replace(/[^0-9]/g, '')))));
+        break;
+      default:
+        break;
+    }
   };
 
   const setDateRange = (value: string) => {
@@ -77,7 +117,28 @@ const FilterPanel = () => {
       gender: [],
       dateRange: "last7",
     });
+    dispatch(filtersActions.setUtmmFilter([]));
+    dispatch(filtersActions.setGenderFilter([]));
+    dispatch(filtersActions.setAgeGroupFilter([]));
+    dispatch(filtersActions.setRevenueFilter([]));
+    setSelectedFilters((prev) => ({ ...prev, dateRange: "last7" }));
   };
+
+  useEffect(() => {
+    setSelectedFilters((prev) => ({
+      ...prev,
+      utmSource: utms || [],
+      gender: gender || [],
+    }));
+  }, [utms, gender]);
+
+  useEffect(() => {
+    setSelectedFilters((prev) => ({
+      ...prev,
+      ageGroup: ageGroups || [],
+      revenueRange: (revenue || []).map(String),
+    }));
+  }, [ageGroups, revenue]);
 
   const applyFilters = () => {
     console.log("Applying filters:", selectedFilters);
@@ -147,7 +208,6 @@ const FilterPanel = () => {
       </div>
     </div>
   );
-
 
   return (
     <React.Fragment>

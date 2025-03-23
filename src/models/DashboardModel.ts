@@ -366,16 +366,19 @@ class DashboardModel {
     // Apply any necessary UTM and Gender filters here
     transactions = transactions.filter((t) => {
       const utmMatch =
-        filters.utms.length === 0 || filters.utms.includes(t.utm_source);
+        filters.utms.length === 0 ||
+        filters.utms.map((item) => item.toLowerCase()).includes(t.utm_source);
 
       const genderMatch =
         filters.gender.length === 0 ||
-        filters.gender.includes(t.customer_metadata.gender);
+        filters.gender.map((item) => item.toLowerCase()).includes(t.customer_metadata.gender);
+
 
       return utmMatch && genderMatch;
     });
 
     this.transactions = transactions;
+    
     this.dateRange = dateRang;
     const utm_sources = this.getUTMSources(transactions);
 
