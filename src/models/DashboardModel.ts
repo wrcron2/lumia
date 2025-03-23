@@ -376,11 +376,16 @@ class DashboardModel {
           .map((item) => item.toLowerCase())
           .includes(t.customer_metadata.gender);
 
-      // const revenueMatch =
-      //   filters.revenue.length === 0 ||
-      //   filters.revenue.some;
+          const revenueMatch = 
+          filters.revenue.length === 0 || 
+          filters.revenue.some(range => {
+            const amount = t.revenue_usd; 
+            const isAboveMin = amount >= range.min;
+            const isBelowMax = range.max === null ? true : amount <= range.max;
+            return isAboveMin && isBelowMax;
+          });
 
-      return utmMatch && genderMatch;
+      return utmMatch && genderMatch && revenueMatch;
     });
 
     this.transactions = transactions;
