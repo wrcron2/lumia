@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { TimeRangeTab, TimeRangeTabMap } from "./models/DashboardModel";
 import DashboardModel, { TransactionsTabRange } from "./models/DashboardModel";
 import { useFetchTransactions } from "./hooks/fetchTransaction";
-import LoadingPage from "./views/loadingPage";
+import LoadingPage, { renderSankeyDiagram } from "./views/loadingPage";
 import { useAppDispatch } from "./redux/hooks";
 import { AppDispatch, RootState } from "./redux/store";
 import { ageGroupActions } from "./redux/slices/ageGroupSlice";
@@ -30,7 +30,7 @@ const TABS_DAYS_RANGE = [
   TimeRangeTab.AllTime,
 ];
 
-function EnhancedResponsiveApp() {
+function Dashboard() {
   const dispatch = useAppDispatch<AppDispatch>();
   const utms = useSelector((state: RootState) => state.filters.utms);
   const gender = useSelector((state: RootState) => state.filters.gender);
@@ -51,7 +51,11 @@ function EnhancedResponsiveApp() {
       ageGroups,
       revenue,
     };
-    return DashboardModel.processTransactions(transactions, selectedDaysTab, filters);
+    return DashboardModel.processTransactions(
+      transactions,
+      selectedDaysTab,
+      filters
+    );
   }, [transactions, selectedDaysTab, utms, gender, ageGroups, revenue]);
 
   useEffect(() => {
@@ -87,7 +91,6 @@ function EnhancedResponsiveApp() {
           });
         }}
       >
-        {/* Background element that animates */}
         <span
           className={`
           absolute inset-0 
@@ -99,7 +102,6 @@ function EnhancedResponsiveApp() {
           aria-hidden="true"
         ></span>
 
-        {/* Text content */}
         <span className="relative z-10 transition-all duration-100">
           {TimeRangeTabMap[tab]}
         </span>
@@ -137,7 +139,7 @@ function EnhancedResponsiveApp() {
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <div className="min-h-[30rem] bg-white  rounded-lg relative">
-            <React.Suspense fallback={<div>Loading components...</div>}>
+            <React.Suspense fallback={renderSankeyDiagram()}>
               <SankeyDiagram />
             </React.Suspense>
           </div>
@@ -209,4 +211,4 @@ function EnhancedResponsiveApp() {
   );
 }
 
-export default EnhancedResponsiveApp;
+export default Dashboard;

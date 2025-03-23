@@ -1,7 +1,7 @@
 
-import EnhancedResponsiveApp from "./EnhancedResponsiveApp";
+import Dashboard from "./Dashboard";
 function App() {
-  return <EnhancedResponsiveApp />;
+  return <Dashboard />;
 }
 
 export default App;
